@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Pose } from '@mediapipe/pose'
 import { Camera } from '@mediapipe/camera_utils'
 import './App.css'
@@ -14,40 +14,64 @@ function App() {
   const [formWarning, setFormWarning] = useState('')
   const [bodyVisible, setBodyVisible] = useState(true)
   const [cameraAngle, setCameraAngle] = useState('')
-  
+  const [cameraError, setCameraError] = useState(null)
+
   const previousStateRef = useRef('standing')
   const landmarksRef = useRef(null)
   const repCooldownRef = useRef(false) // Prevent double counting
 
   useEffect(() => {
-    const pose = new Pose({
-      locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    const initializeCamera = async () => {
+      try {
+        const pose = new Pose({
+          locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+          }
+        })
+
+        pose.setOptions({
+          modelComplexity: 1,
+          smoothLandmarks: true,
+          enableSegmentation: false,
+          minDetectionConfidence: 0.6,
+          minTrackingConfidence: 0.6
+        })
+
+        pose.onResults(onResults)
+
+        if (videoRef.current) {
+          // Request camera permissions explicitly
+          try {
+            await navigator.mediaDevices.getUserMedia({ video: true })
+          } catch {
+            throw new Error('Camera permission denied. Please allow camera access in your browser settings.')
+          }
+
+          const camera = new Camera(videoRef.current, {
+            onFrame: async () => {
+              await pose.send({ image: videoRef.current })
+            },
+            width: 640,
+            height: 480
+          })
+
+          // Start camera and wait a bit to ensure it's ready
+          await camera.start()
+
+          // Give camera a moment to initialize
+          setTimeout(() => {
+            setIsLoading(false)
+          }, 500)
+        }
+      } catch (error) {
+        console.error('Camera initialization error:', error)
+        setIsLoading(false)
+        setCameraError(error.message || 'Failed to initialize camera. Please refresh the page and allow camera access.')
       }
-    })
-
-    pose.setOptions({
-      modelComplexity: 1,
-      smoothLandmarks: true,
-      enableSegmentation: false,
-      minDetectionConfidence: 0.6, // Increased from 0.5
-      minTrackingConfidence: 0.6    // Increased from 0.5
-    })
-
-    pose.onResults(onResults)
-
-    if (videoRef.current) {
-      const camera = new Camera(videoRef.current, {
-        onFrame: async () => {
-          await pose.send({ image: videoRef.current })
-        },
-        width: 640,
-        height: 480
-      })
-      camera.start()
-      setIsLoading(false)
     }
-  }, [])
+
+    initializeCamera()
+  }, [onResults])
 
   function calculateAngle(a, b, c) {
     const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x)
@@ -133,53 +157,53 @@ function App() {
     }
   }
 
-  function onResults(results) {
+  const onResults = useCallback((results) => {
     const canvas = canvasRef.current
     if (!canvas) return
-    
+
     const ctx = canvas.getContext('2d')
-    
+
     ctx.save()
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height)
-    
+
     if (results.poseLandmarks) {
       setIsTracking(true)
       landmarksRef.current = results.poseLandmarks
-      
+
       // Detect camera angle
       const angle = detectCameraAngle(results.poseLandmarks)
       setCameraAngle(angle)
-      
+
       // Check if full body is visible
       const fullBodyVisible = checkFullBodyVisible(results.poseLandmarks)
       setBodyVisible(fullBodyVisible)
-      
+
       if (fullBodyVisible) {
         // Analyze form
         const formData = analyzeSquatForm(results.poseLandmarks)
         setCurrentKneeAngle(Math.round(formData.kneeAngle))
-        
+
         // IMPROVED REP COUNTING LOGIC
         // Standing: knee angle > 150°
         // Squatting: knee angle < 110°
         // Hysteresis to prevent bouncing
-        
-        let currentState = squatState // Keep previous state by default
-        
-        if (squatState === 'standing' && formData.kneeAngle < 110) {
+
+        let newSquatState = previousStateRef.current // Use ref for immediate access
+
+        if (previousStateRef.current === 'standing' && formData.kneeAngle < 110) {
           // Transition to squatting
-          currentState = 'squatting'
+          newSquatState = 'squatting'
           repCooldownRef.current = false // Ready to count when standing again
-        } else if (squatState === 'squatting' && formData.kneeAngle > 150) {
+        } else if (previousStateRef.current === 'squatting' && formData.kneeAngle > 150) {
           // Transition to standing - COUNT REP
-          currentState = 'standing'
-          
+          newSquatState = 'standing'
+
           // Only count if not in cooldown (prevents double counting)
           if (!repCooldownRef.current) {
             setRepCount(prev => prev + 1)
             repCooldownRef.current = true
-            
+
             // Check if form was questionable
             if (formData.depth < 0.05) {
               setFormWarning('⚠️ Depth too shallow - need deeper squat')
@@ -188,31 +212,31 @@ function App() {
             } else {
               setFormWarning('')
             }
-            
+
             // Clear cooldown after 500ms
             setTimeout(() => {
               repCooldownRef.current = false
             }, 500)
           }
         }
-        
-        setSquatState(currentState)
-        previousStateRef.current = currentState
-        
-        drawSkeleton(ctx, results.poseLandmarks, formData, fullBodyVisible)
+
+        previousStateRef.current = newSquatState
+        setSquatState(newSquatState)
+
+        drawSkeleton(ctx, results.poseLandmarks, formData, fullBodyVisible, newSquatState)
       } else {
         // Body not fully visible - draw warning
-        drawSkeleton(ctx, results.poseLandmarks, null, fullBodyVisible)
+        drawSkeleton(ctx, results.poseLandmarks, null, fullBodyVisible, previousStateRef.current)
       }
     } else {
       setIsTracking(false)
       setBodyVisible(false)
     }
-    
-    ctx.restore()
-  }
 
-  function drawSkeleton(ctx, landmarks, formData, fullBodyVisible) {
+    ctx.restore()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function drawSkeleton(ctx, landmarks, formData, fullBodyVisible, currentSquatState) {
     const connections = [
       [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
       [11, 23], [12, 24], [23, 24],
@@ -224,7 +248,7 @@ function App() {
     let lineColor = '#00ff88' // Default green
     if (!fullBodyVisible) {
       lineColor = '#ff4444' // Red if body not fully visible
-    } else if (squatState === 'squatting') {
+    } else if (currentSquatState === 'squatting') {
       lineColor = '#ffaa00' // Orange when squatting
     }
 
@@ -463,6 +487,38 @@ function App() {
           textAlign: 'center'
         }}>
           ✅ SIDE VIEW - Perfect camera angle!
+        </div>
+      )}
+
+      {/* Camera Error Message */}
+      {cameraError && (
+        <div style={{
+          maxWidth: '640px',
+          margin: '0 auto 20px',
+          background: 'rgba(255, 68, 68, 0.15)',
+          backdropFilter: 'blur(10px)',
+          border: '2px solid #ff4444',
+          borderRadius: '12px',
+          padding: '20px 30px',
+          color: '#ff4444',
+          fontWeight: '600',
+          textAlign: 'center'
+        }}>
+          <div style={{ fontSize: '1.2em', marginBottom: '10px' }}>
+            🚫 Camera Error
+          </div>
+          <div style={{ fontSize: '0.95em', lineHeight: '1.6' }}>
+            {cameraError}
+          </div>
+          <div style={{ fontSize: '0.85em', marginTop: '12px', opacity: 0.9, fontWeight: 'normal' }}>
+            Common fixes:
+            <ul style={{ textAlign: 'left', marginTop: '8px', paddingLeft: '20px' }}>
+              <li>Allow camera access when prompted by your browser</li>
+              <li>Check if another application is using your camera</li>
+              <li>Make sure you're using HTTPS or localhost</li>
+              <li>Try refreshing the page</li>
+            </ul>
+          </div>
         </div>
       )}
 
