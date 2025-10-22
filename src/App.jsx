@@ -14,10 +14,71 @@ function App() {
   const [formWarning, setFormWarning] = useState('')
   const [bodyVisible, setBodyVisible] = useState(true)
   const [cameraAngle, setCameraAngle] = useState('')
+
+  // Session tracking state
+  const [workoutActive, setWorkoutActive] = useState(false)
+  const [workoutStartTime, setWorkoutStartTime] = useState(null)
+  const [workoutDuration, setWorkoutDuration] = useState(0)
+  const [sessionWarningsCount, setSessionWarningsCount] = useState(0)
+  const [showSummary, setShowSummary] = useState(false)
+  const [sessionSummary, setSessionSummary] = useState(null)
   
   const previousStateRef = useRef('standing')
   const landmarksRef = useRef(null)
   const repCooldownRef = useRef(false) // Prevent double counting
+  const smoothedAngleRef = useRef(180) // Smoothed knee angle for filtering jitter
+  const angleHistoryRef = useRef([]) // Store recent angles for better smoothing
+
+  // Timer effect for workout duration
+  useEffect(() => {
+    let interval
+    if (workoutActive && workoutStartTime) {
+      interval = setInterval(() => {
+        const duration = Math.floor((Date.now() - workoutStartTime) / 1000)
+        setWorkoutDuration(duration)
+      }, 1000)
+    }
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [workoutActive, workoutStartTime])
+
+  // Start workout handler
+  const startWorkout = () => {
+    setWorkoutActive(true)
+    setWorkoutStartTime(Date.now())
+    setRepCount(0)
+    setSessionWarningsCount(0)
+    setWorkoutDuration(0)
+    setShowSummary(false)
+    setFormWarning('')
+    console.log('[Workout] Started at', new Date().toLocaleTimeString())
+  }
+
+  // End workout handler
+  const endWorkout = () => {
+    setWorkoutActive(false)
+    const finalDuration = workoutDuration
+
+    // Create session summary
+    const summary = {
+      totalReps: repCount,
+      duration: finalDuration,
+      warnings: sessionWarningsCount,
+      endTime: new Date().toLocaleTimeString()
+    }
+
+    setSessionSummary(summary)
+    setShowSummary(true)
+
+    console.log('[Workout] Ended', summary)
+  }
+
+  // Close summary and reset
+  const closeSummary = () => {
+    setShowSummary(false)
+    setSessionSummary(null)
+  }
 
   useEffect(() => {
     const pose = new Pose({
@@ -58,30 +119,81 @@ function App() {
     return angle
   }
 
+  function smoothAngle(rawAngle) {
+    // Add to history (keep last 5 frames for moving average)
+    angleHistoryRef.current.push(rawAngle)
+    if (angleHistoryRef.current.length > 5) {
+      angleHistoryRef.current.shift()
+    }
+
+    // Calculate weighted moving average (more weight on recent values)
+    const weights = [0.1, 0.15, 0.2, 0.25, 0.3] // Most recent has highest weight
+    let smoothedAngle = 0
+    let totalWeight = 0
+
+    for (let i = 0; i < angleHistoryRef.current.length; i++) {
+      const weight = weights[weights.length - angleHistoryRef.current.length + i] || 0.2
+      smoothedAngle += angleHistoryRef.current[i] * weight
+      totalWeight += weight
+    }
+
+    smoothedAngle = smoothedAngle / totalWeight
+
+    // Also apply exponential moving average for additional smoothing
+    const alpha = 0.3 // Smoothing factor (0 = maximum smoothing, 1 = no smoothing)
+    smoothedAngleRef.current = alpha * smoothedAngle + (1 - alpha) * smoothedAngleRef.current
+
+    console.log('[Angle Smoothing]', {
+      raw: rawAngle.toFixed(2),
+      movingAvg: smoothedAngle.toFixed(2),
+      exponentialSmoothed: smoothedAngleRef.current.toFixed(2),
+      historySize: angleHistoryRef.current.length
+    })
+
+    return smoothedAngleRef.current
+  }
+
   function checkFullBodyVisible(landmarks) {
     // Only check the most critical points for squat tracking
     const criticalPoints = [23, 24, 25, 26, 27, 28] // hips, knees, ankles only
-    
+
     let visibleCount = 0
-    
+    const pointStatus = {}
+
     for (let idx of criticalPoints) {
       const point = landmarks[idx]
-      if (!point) continue
-      
+      if (!point) {
+        pointStatus[idx] = 'missing'
+        continue
+      }
+
       // More lenient frame bounds - allow points closer to edges
       const inFrameX = point.x > 0.02 && point.x < 0.98
       const inFrameY = point.y > 0.02 && point.y < 0.98
-      
+
       // More lenient visibility threshold
       const isVisible = !point.visibility || point.visibility > 0.3
-      
+
       if (inFrameX && inFrameY && isVisible) {
         visibleCount++
+        pointStatus[idx] = 'visible'
+      } else {
+        pointStatus[idx] = `outOfFrame(x:${inFrameX},y:${inFrameY},vis:${isVisible})`
       }
     }
-    
+
     // Need at least 5 out of 6 critical points visible (83%)
-    return visibleCount >= 5
+    const isFullBodyVisible = visibleCount >= 5
+
+    console.log('[Body Visibility]', {
+      visibleCount,
+      total: criticalPoints.length,
+      percentage: ((visibleCount / criticalPoints.length) * 100).toFixed(1) + '%',
+      isFullBodyVisible,
+      pointStatus
+    })
+
+    return isFullBodyVisible
   }
 
   function detectCameraAngle(landmarks) {
@@ -118,15 +230,29 @@ function App() {
     // Calculate knee angles
     const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle)
     const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle)
-    const avgKneeAngle = (leftKneeAngle + rightKneeAngle) / 2
+    const rawAvgKneeAngle = (leftKneeAngle + rightKneeAngle) / 2
+
+    // Apply smoothing to reduce jitter
+    const smoothedKneeAngle = smoothAngle(rawAvgKneeAngle)
 
     // Calculate hip depth
     const avgHipY = (leftHip.y + rightHip.y) / 2
     const avgKneeY = (leftKnee.y + rightKnee.y) / 2
     const depth = avgKneeY - avgHipY
 
+    // Debug logging for angle and depth values
+    console.log('[Form Analysis]', {
+      leftKneeAngle: leftKneeAngle.toFixed(2),
+      rightKneeAngle: rightKneeAngle.toFixed(2),
+      rawAvgKneeAngle: rawAvgKneeAngle.toFixed(2),
+      smoothedKneeAngle: smoothedKneeAngle.toFixed(2),
+      depth: depth.toFixed(4),
+      angleDifference: Math.abs(leftKneeAngle - rightKneeAngle).toFixed(2)
+    })
+
     return {
-      kneeAngle: avgKneeAngle,
+      kneeAngle: smoothedKneeAngle, // Use smoothed angle for rep counting
+      rawKneeAngle: rawAvgKneeAngle,
       depth: depth,
       leftKneeAngle,
       rightKneeAngle
@@ -164,38 +290,69 @@ function App() {
         // Standing: knee angle > 150°
         // Squatting: knee angle < 110°
         // Hysteresis to prevent bouncing
-        
+
         let currentState = squatState // Keep previous state by default
-        
+
         if (squatState === 'standing' && formData.kneeAngle < 110) {
           // Transition to squatting
           currentState = 'squatting'
           repCooldownRef.current = false // Ready to count when standing again
+          console.log('[State Transition] Standing → Squatting', {
+            kneeAngle: formData.kneeAngle.toFixed(2),
+            threshold: 110
+          })
         } else if (squatState === 'squatting' && formData.kneeAngle > 150) {
           // Transition to standing - COUNT REP
           currentState = 'standing'
-          
-          // Only count if not in cooldown (prevents double counting)
-          if (!repCooldownRef.current) {
+
+          // Only count if not in cooldown (prevents double counting) and workout is active
+          if (!repCooldownRef.current && workoutActive) {
             setRepCount(prev => prev + 1)
             repCooldownRef.current = true
-            
+
+            console.log('[REP COUNTED]', {
+              newRepCount: repCount + 1,
+              kneeAngle: formData.kneeAngle.toFixed(2),
+              depth: formData.depth.toFixed(4),
+              leftKneeAngle: formData.leftKneeAngle.toFixed(2),
+              rightKneeAngle: formData.rightKneeAngle.toFixed(2)
+            })
+
             // Check if form was questionable
+            let hasWarning = false
             if (formData.depth < 0.05) {
               setFormWarning('⚠️ Depth too shallow - need deeper squat')
+              console.warn('[Form Warning] Shallow depth detected:', formData.depth.toFixed(4))
+              hasWarning = true
             } else if (Math.abs(formData.leftKneeAngle - formData.rightKneeAngle) > 15) {
               setFormWarning('⚠️ Uneven form - one leg different than other')
+              console.warn('[Form Warning] Uneven form detected:', {
+                leftKneeAngle: formData.leftKneeAngle.toFixed(2),
+                rightKneeAngle: formData.rightKneeAngle.toFixed(2),
+                difference: Math.abs(formData.leftKneeAngle - formData.rightKneeAngle).toFixed(2)
+              })
+              hasWarning = true
             } else {
               setFormWarning('')
+              console.log('[Form Check] Good form!')
             }
-            
+
+            // Increment warnings counter if there was a warning
+            if (hasWarning) {
+              setSessionWarningsCount(prev => prev + 1)
+            }
+
             // Clear cooldown after 500ms
             setTimeout(() => {
               repCooldownRef.current = false
             }, 500)
+          } else if (!workoutActive) {
+            console.log('[Rep Skipped] Workout not active')
+          } else {
+            console.log('[Rep Skipped] In cooldown period')
           }
         }
-        
+
         setSquatState(currentState)
         previousStateRef.current = currentState
         
@@ -312,11 +469,62 @@ function App() {
         </p>
       </div>
 
+      {/* Session Control Buttons */}
+      <div style={{
+        maxWidth: '640px',
+        margin: '0 auto 20px',
+        display: 'flex',
+        gap: '15px',
+        justifyContent: 'center'
+      }}>
+        {!workoutActive ? (
+          <button
+            onClick={startWorkout}
+            style={{
+              background: 'linear-gradient(135deg, #00ff88 0%, #00ccff 100%)',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '15px 40px',
+              color: '#0f0f23',
+              fontSize: '1.2em',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(0, 255, 136, 0.3)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+            onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+          >
+            Start Workout
+          </button>
+        ) : (
+          <button
+            onClick={endWorkout}
+            style={{
+              background: 'linear-gradient(135deg, #ff4444 0%, #ff6b6b 100%)',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '15px 40px',
+              color: 'white',
+              fontSize: '1.2em',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(255, 68, 68, 0.3)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+            onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+          >
+            End Workout
+          </button>
+        )}
+      </div>
+
       <div style={{
         maxWidth: '640px',
         margin: '0 auto 20px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '15px'
       }}>
         {/* Rep Count */}
@@ -338,6 +546,28 @@ function App() {
             lineHeight: '1'
           }}>
             {repCount}
+          </div>
+        </div>
+
+        {/* Duration */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          padding: '20px',
+          textAlign: 'center'
+        }}>
+          <div style={{ color: '#8892b0', fontSize: '0.9em', marginBottom: '5px' }}>
+            Duration
+          </div>
+          <div style={{
+            color: workoutActive ? '#00ccff' : '#8892b0',
+            fontSize: '1.5em',
+            fontWeight: 'bold',
+            lineHeight: '1'
+          }}>
+            {Math.floor(workoutDuration / 60)}:{(workoutDuration % 60).toString().padStart(2, '0')}
           </div>
         </div>
 
@@ -539,12 +769,140 @@ function App() {
         </ul>
       </div>
 
+      {/* Session Summary Modal */}
+      {showSummary && sessionSummary && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f23 100%)',
+            border: '2px solid rgba(0, 255, 136, 0.3)',
+            borderRadius: '20px',
+            padding: '40px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 20px 60px rgba(0, 255, 136, 0.2)'
+          }}>
+            <h2 style={{
+              color: '#00ff88',
+              fontSize: '2em',
+              marginTop: 0,
+              marginBottom: '30px',
+              textAlign: 'center'
+            }}>
+              Workout Complete!
+            </h2>
+
+            <div style={{
+              display: 'grid',
+              gap: '20px',
+              marginBottom: '30px'
+            }}>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '12px',
+                padding: '20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span style={{ color: '#8892b0', fontSize: '1.1em' }}>Total Reps</span>
+                <span style={{ color: '#00ff88', fontSize: '2em', fontWeight: 'bold' }}>
+                  {sessionSummary.totalReps}
+                </span>
+              </div>
+
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '12px',
+                padding: '20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span style={{ color: '#8892b0', fontSize: '1.1em' }}>Duration</span>
+                <span style={{ color: '#00ccff', fontSize: '1.8em', fontWeight: 'bold' }}>
+                  {Math.floor(sessionSummary.duration / 60)}:{(sessionSummary.duration % 60).toString().padStart(2, '0')}
+                </span>
+              </div>
+
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '12px',
+                padding: '20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span style={{ color: '#8892b0', fontSize: '1.1em' }}>Form Warnings</span>
+                <span style={{
+                  color: sessionSummary.warnings > 0 ? '#ffaa00' : '#00ff88',
+                  fontSize: '1.8em',
+                  fontWeight: 'bold'
+                }}>
+                  {sessionSummary.warnings}
+                </span>
+              </div>
+
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '12px',
+                padding: '20px',
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#8892b0', fontSize: '0.9em', marginBottom: '5px' }}>
+                  Form Quality
+                </div>
+                <div style={{
+                  color: sessionSummary.warnings === 0 ? '#00ff88' : sessionSummary.warnings < sessionSummary.totalReps * 0.3 ? '#00ccff' : '#ffaa00',
+                  fontSize: '1.3em',
+                  fontWeight: 'bold'
+                }}>
+                  {sessionSummary.warnings === 0 ? 'Perfect!' : sessionSummary.warnings < sessionSummary.totalReps * 0.3 ? 'Good' : 'Needs Work'}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={closeSummary}
+              style={{
+                width: '100%',
+                background: 'linear-gradient(135deg, #00ff88 0%, #00ccff 100%)',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '15px',
+                color: '#0f0f23',
+                fontSize: '1.1em',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(0, 255, 136, 0.3)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+            >
+              Close Summary
+            </button>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        
+
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
