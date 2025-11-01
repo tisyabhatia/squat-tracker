@@ -9,6 +9,8 @@ function App() {
   const [repCount, setRepCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isTracking, setIsTracking] = useState(false)
+  const [devMode, setDevMode] = useState(false)
+  const [cameraError, setCameraError] = useState('')
   const [squatState, setSquatState] = useState('standing')
   const [currentKneeAngle, setCurrentKneeAngle] = useState(180)
   const [formWarning, setFormWarning] = useState('')
@@ -26,8 +28,21 @@ function App() {
   const previousStateRef = useRef('standing')
   const landmarksRef = useRef(null)
   const repCooldownRef = useRef(false) // Prevent double counting
+  const squatTroughRef = useRef({ minAngle: 180, maxDepth: 0 }) // Track troughs while squatting
+  const currentFormRef = useRef(null)
   const smoothedAngleRef = useRef(180) // Smoothed knee angle for filtering jitter
   const angleHistoryRef = useRef([]) // Store recent angles for better smoothing
+  // Configurable thresholds
+  const CONFIG = {
+    squatAngleEnter: 110, // angle to consider 'in squat'
+    squatAngleExit: 150, // angle to consider 'standing' (rep counted on exit)
+    minDepthForRep: 0.04, // minimum depth (in normalized Y space) to consider a valid rep
+    maxKneeAngleDiff: 15, // max permitted left/right knee angle difference
+    smoothingWindow: 5,
+    smoothingAlpha: 0.3
+  }
+  const cameraRef = useRef(null)
+  const loadingTimeoutRef = useRef(null)
 
   // Timer effect for workout duration
   useEffect(() => {
@@ -105,8 +120,27 @@ function App() {
         width: 640,
         height: 480
       })
+      // Keep reference so we can restart/stop the camera if needed
+      cameraRef.current = camera
       camera.start()
-      setIsLoading(false)
+      // Set a timeout in case the camera takes too long to start
+      loadingTimeoutRef.current = setTimeout(() => {
+        setCameraError('Camera taking too long to start. Check permissions or try retrying.')
+        setIsLoading(false)
+      }, 6000)
+    }
+
+    return () => {
+      // Cleanup camera and loading timeout
+      try {
+        if (cameraRef.current && cameraRef.current.stop) cameraRef.current.stop()
+      } catch (e) {
+        console.warn('[Camera Cleanup] error stopping camera', e)
+      }
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current)
+        loadingTimeoutRef.current = null
+      }
     }
   }, [])
 
@@ -122,12 +156,14 @@ function App() {
   function smoothAngle(rawAngle) {
     // Add to history (keep last 5 frames for moving average)
     angleHistoryRef.current.push(rawAngle)
-    if (angleHistoryRef.current.length > 5) {
+    if (angleHistoryRef.current.length > CONFIG.smoothingWindow) {
       angleHistoryRef.current.shift()
     }
 
     // Calculate weighted moving average (more weight on recent values)
-    const weights = [0.1, 0.15, 0.2, 0.25, 0.3] // Most recent has highest weight
+  // Build weights dynamically from window size (older frames lower weight)
+  const baseWeights = [0.1, 0.15, 0.2, 0.25, 0.3]
+  const weights = baseWeights.slice(-CONFIG.smoothingWindow)
     let smoothedAngle = 0
     let totalWeight = 0
 
@@ -140,8 +176,8 @@ function App() {
     smoothedAngle = smoothedAngle / totalWeight
 
     // Also apply exponential moving average for additional smoothing
-    const alpha = 0.3 // Smoothing factor (0 = maximum smoothing, 1 = no smoothing)
-    smoothedAngleRef.current = alpha * smoothedAngle + (1 - alpha) * smoothedAngleRef.current
+  const alpha = CONFIG.smoothingAlpha // Smoothing factor
+  smoothedAngleRef.current = alpha * smoothedAngle + (1 - alpha) * smoothedAngleRef.current
 
     console.log('[Angle Smoothing]', {
       raw: rawAngle.toFixed(2),
@@ -155,7 +191,8 @@ function App() {
 
   function checkFullBodyVisible(landmarks) {
     // Only check the most critical points for squat tracking
-    const criticalPoints = [23, 24, 25, 26, 27, 28] // hips, knees, ankles only
+    // Require shoulders + lower body for better reliability
+    const criticalPoints = [11, 12, 23, 24, 25, 26, 27, 28] // shoulders, hips, knees, ankles
 
     let visibleCount = 0
     const pointStatus = {}
@@ -167,12 +204,12 @@ function App() {
         continue
       }
 
-      // More lenient frame bounds - allow points closer to edges
-      const inFrameX = point.x > 0.02 && point.x < 0.98
-      const inFrameY = point.y > 0.02 && point.y < 0.98
+  // Frame bounds - require points slightly inside frame
+  const inFrameX = point.x > 0.03 && point.x < 0.97
+  const inFrameY = point.y > 0.03 && point.y < 0.97
 
-      // More lenient visibility threshold
-      const isVisible = !point.visibility || point.visibility > 0.3
+  // Visibility threshold - require moderate confidence
+  const isVisible = !point.visibility || point.visibility > 0.35
 
       if (inFrameX && inFrameY && isVisible) {
         visibleCount++
@@ -182,8 +219,8 @@ function App() {
       }
     }
 
-    // Need at least 5 out of 6 critical points visible (83%)
-    const isFullBodyVisible = visibleCount >= 5
+  // Need at least 6 out of 8 critical points visible (75%)
+  const isFullBodyVisible = visibleCount >= 6
 
     console.log('[Body Visibility]', {
       visibleCount,
@@ -241,7 +278,8 @@ function App() {
     const depth = avgKneeY - avgHipY
 
     // Debug logging for angle and depth values
-    console.log('[Form Analysis]', {
+    // Per-frame debug logs - useful while tuning
+    console.debug('[Form Analysis]', {
       leftKneeAngle: leftKneeAngle.toFixed(2),
       rightKneeAngle: rightKneeAngle.toFixed(2),
       rawAvgKneeAngle: rawAvgKneeAngle.toFixed(2),
@@ -270,6 +308,15 @@ function App() {
     ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height)
     
     if (results.poseLandmarks) {
+      // First successful result - camera and pose are working
+      if (isLoading) {
+        setIsLoading(false)
+      }
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current)
+        loadingTimeoutRef.current = null
+      }
+      if (cameraError) setCameraError('')
       setIsTracking(true)
       landmarksRef.current = results.poseLandmarks
       
@@ -291,40 +338,63 @@ function App() {
         // Squatting: knee angle < 110°
         // Hysteresis to prevent bouncing
 
-        let currentState = squatState // Keep previous state by default
+  let currentState = squatState // Keep previous state by default
 
-        if (squatState === 'standing' && formData.kneeAngle < 110) {
+  if (squatState === 'standing' && formData.kneeAngle < CONFIG.squatAngleEnter) {
           // Transition to squatting
           currentState = 'squatting'
           repCooldownRef.current = false // Ready to count when standing again
+          // Reset trough tracking for this new squat
+          squatTroughRef.current = { minAngle: formData.kneeAngle, maxDepth: formData.depth }
           console.log('[State Transition] Standing → Squatting', {
             kneeAngle: formData.kneeAngle.toFixed(2),
-            threshold: 110
+            threshold: CONFIG.squatAngleEnter
           })
         } else if (squatState === 'squatting' && formData.kneeAngle > 150) {
           // Transition to standing - COUNT REP
           currentState = 'standing'
 
           // Only count if not in cooldown (prevents double counting) and workout is active
-          if (!repCooldownRef.current && workoutActive) {
-            setRepCount(prev => prev + 1)
+          // In devMode we allow counting without starting a workout to aid testing
+          if (!repCooldownRef.current && (workoutActive || devMode)) {
+            // Check trough metrics to validate rep
+            const trough = squatTroughRef.current || { minAngle: 180, maxDepth: 0 }
+            // Save latest form/trough for debug overlay
+            currentFormRef.current = { ...formData, trough }
+            const reachedDepth = trough.maxDepth >= CONFIG.minDepthForRep
+            const reachedAngle = trough.minAngle <= CONFIG.squatAngleEnter
+
+            console.log('[Rep Validation]', {
+              troughMinAngle: trough.minAngle.toFixed(2),
+              troughMaxDepth: trough.maxDepth.toFixed(4),
+              reachedDepth,
+              reachedAngle
+            })
+
+            if (reachedDepth && reachedAngle) {
+              setRepCount(prev => prev + 1)
+            } else {
+              console.log('[Rep Rejected] Did not reach depth/angle requirements')
+            }
             repCooldownRef.current = true
 
-            console.log('[REP COUNTED]', {
+            console.log('[REP]', {
               newRepCount: repCount + 1,
               kneeAngle: formData.kneeAngle.toFixed(2),
               depth: formData.depth.toFixed(4),
               leftKneeAngle: formData.leftKneeAngle.toFixed(2),
-              rightKneeAngle: formData.rightKneeAngle.toFixed(2)
+              rightKneeAngle: formData.rightKneeAngle.toFixed(2),
+              trough: squatTroughRef.current
             })
 
-            // Check if form was questionable
+            // Check if form was questionable using troughs for more reliable reading
             let hasWarning = false
-            if (formData.depth < 0.05) {
+            const troughForWarning = trough || (squatTroughRef.current || { minAngle: formData.kneeAngle, maxDepth: formData.depth })
+            if (troughForWarning.maxDepth < CONFIG.minDepthForRep) {
               setFormWarning('⚠️ Depth too shallow - need deeper squat')
-              console.warn('[Form Warning] Shallow depth detected:', formData.depth.toFixed(4))
+              console.warn('[Form Warning] Shallow depth detected:', troughForWarning.maxDepth.toFixed(4))
               hasWarning = true
-            } else if (Math.abs(formData.leftKneeAngle - formData.rightKneeAngle) > 15) {
+            } else if (Math.abs(formData.leftKneeAngle - formData.rightKneeAngle) > CONFIG.maxKneeAngleDiff) {
               setFormWarning('⚠️ Uneven form - one leg different than other')
               console.warn('[Form Warning] Uneven form detected:', {
                 leftKneeAngle: formData.leftKneeAngle.toFixed(2),
@@ -356,6 +426,17 @@ function App() {
         setSquatState(currentState)
         previousStateRef.current = currentState
         
+        // Update squat trough tracking while squatting
+        if (currentState === 'squatting') {
+          const t = squatTroughRef.current || { minAngle: 180, maxDepth: 0 }
+          t.minAngle = Math.min(t.minAngle, formData.kneeAngle)
+          t.maxDepth = Math.max(t.maxDepth, formData.depth)
+          squatTroughRef.current = t
+        }
+        
+        // store latest formData for overlay
+        currentFormRef.current = formData
+
         drawSkeleton(ctx, results.poseLandmarks, formData, fullBodyVisible)
       } else {
         // Body not fully visible - draw warning
@@ -367,6 +448,27 @@ function App() {
     }
     
     ctx.restore()
+  }
+
+  function restartCamera() {
+    setCameraError('')
+    setIsLoading(true)
+    try {
+      if (cameraRef.current) {
+        if (cameraRef.current.stop) cameraRef.current.stop()
+        if (cameraRef.current.start) cameraRef.current.start()
+      }
+    } catch (e) {
+      console.warn('[Restart Camera] failed', e)
+      setCameraError('Failed to restart camera. Please reload the page or check camera permissions.')
+      setIsLoading(false)
+    }
+    // setup a fallback timeout again
+    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current)
+    loadingTimeoutRef.current = setTimeout(() => {
+      setCameraError('Camera taking too long to start. Check permissions or try retrying.')
+      setIsLoading(false)
+    }, 6000)
   }
 
   function drawSkeleton(ctx, landmarks, formData, fullBodyVisible) {
@@ -477,6 +579,12 @@ function App() {
         gap: '15px',
         justifyContent: 'center'
       }}>
+        {/* Dev Mode Toggle for testing without starting workout */}
+        <div style={{ position: 'absolute', right: 24, top: 28 }}>
+          <label style={{ color: '#8892b0', fontSize: '0.9em' }}>
+            <input type="checkbox" checked={devMode} onChange={(e) => setDevMode(e.target.checked)} /> Dev Mode
+          </label>
+        </div>
         {!workoutActive ? (
           <button
             onClick={startWorkout}
@@ -724,6 +832,33 @@ function App() {
             Loading Pose Detection...
           </div>
         )}
+        {cameraError && (
+          <div style={{
+            position: 'absolute',
+            top: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 11,
+            background: 'rgba(255, 68, 68, 0.9)',
+            color: 'white',
+            padding: '10px 14px',
+            borderRadius: '8px',
+            fontWeight: '600'
+          }}>
+            {cameraError}
+            <div style={{ marginTop: '8px' }}>
+              <button onClick={restartCamera} style={{
+                background: '#fff',
+                color: '#0f0f23',
+                border: 'none',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '700'
+              }}>Retry Camera</button>
+            </div>
+          </div>
+        )}
         
         <video ref={videoRef} style={{ display: 'none' }} />
         
@@ -741,6 +876,42 @@ function App() {
             transition: 'all 0.3s ease'
           }}
         />
+
+        {/* Debug overlay */}
+        {devMode && (
+          <div style={{
+            position: 'absolute',
+            left: 12,
+            bottom: 12,
+            zIndex: 50,
+            background: 'rgba(0,0,0,0.6)',
+            color: '#fff',
+            padding: '10px 12px',
+            borderRadius: 10,
+            fontSize: '0.9em',
+            minWidth: 220
+          }}>
+            <div style={{ fontWeight: 700, marginBottom: 8 }}>Debug Overlay</div>
+            <div>Tracking: {isTracking ? 'yes' : 'no'}</div>
+            <div>Body Visible: {bodyVisible ? 'yes' : 'no'}</div>
+            <div>Squat State: {squatState}</div>
+            <div>Reps: {repCount}</div>
+            <div>Current Knee: {currentKneeAngle}°</div>
+            <div>Form Warning: {formWarning || 'none'}</div>
+            <div style={{ marginTop: 8, fontSize: '0.85em' }}>
+              {currentFormRef.current ? (
+                <>
+                  <div>Frame knee: {currentFormRef.current.kneeAngle.toFixed(1)}°</div>
+                  <div>Depth: {currentFormRef.current.depth.toFixed(4)}</div>
+                  <div>Trough minAngle: {(currentFormRef.current.trough?.minAngle || 'n/a').toFixed ? currentFormRef.current.trough.minAngle.toFixed(1) + '°' : (currentFormRef.current.trough && currentFormRef.current.trough.minAngle) || 'n/a'}</div>
+                  <div>Trough maxDepth: {(currentFormRef.current.trough?.maxDepth || 'n/a').toFixed ? currentFormRef.current.trough.maxDepth.toFixed(4) : (currentFormRef.current.trough && currentFormRef.current.trough.maxDepth) || 'n/a'}</div>
+                </>
+              ) : (
+                <div>No frame data yet</div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{
@@ -864,11 +1035,11 @@ function App() {
                   Form Quality
                 </div>
                 <div style={{
-                  color: sessionSummary.warnings === 0 ? '#00ff88' : sessionSummary.warnings < sessionSummary.totalReps * 0.3 ? '#00ccff' : '#ffaa00',
+                  color: sessionSummary.totalReps === 0 ? '#8892b0' : (sessionSummary.warnings === 0 ? '#00ff88' : sessionSummary.warnings < sessionSummary.totalReps * 0.3 ? '#00ccff' : '#ffaa00'),
                   fontSize: '1.3em',
                   fontWeight: 'bold'
                 }}>
-                  {sessionSummary.warnings === 0 ? 'Perfect!' : sessionSummary.warnings < sessionSummary.totalReps * 0.3 ? 'Good' : 'Needs Work'}
+                  {sessionSummary.totalReps === 0 ? 'No reps recorded' : (sessionSummary.warnings === 0 ? 'Perfect!' : sessionSummary.warnings < sessionSummary.totalReps * 0.3 ? 'Good' : 'Needs Work')}
                 </div>
               </div>
             </div>
