@@ -29,10 +29,7 @@ export function Auth({ onComplete }: AuthProps) {
     <div className="min-h-screen bg-gradient-to-br from-[#2a2438] via-[#3d3451] to-[#2a2438] flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-card/80 border-border backdrop-blur">
         <CardHeader className="text-center space-y-2">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#F2C4DE] to-[#AED8F2] rounded-2xl flex items-center justify-center mx-auto mb-2">
-            <span className="text-[#2a2438] text-3xl font-bold">✓</span>
-          </div>
-          <CardTitle className="text-3xl text-foreground">checkpoint</CardTitle>
+          <CardTitle className="text-4xl text-foreground mb-2">checkpoint</CardTitle>
           <CardDescription className="text-muted-foreground">
             {isLogin ? 'Welcome back! Sign in to continue' : 'Create your account to get started'}
           </CardDescription>
