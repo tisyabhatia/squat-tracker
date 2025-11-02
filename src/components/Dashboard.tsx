@@ -52,12 +52,10 @@ export function Dashboard() {
 
   // Map user's goals from onboarding to progress tracking
   const goalLabels: Record<string, string> = {
-    'lose-weight': 'Weight Loss',
     'build-muscle': 'Build Muscle',
     'improve-endurance': 'Improve Endurance',
-    'general-fitness': 'General Fitness',
     'strength': 'Build Strength',
-    'maintain-health': 'Maintain Health',
+    'stay-active': 'Stay Active',
   };
 
   const goals = onboardingData?.goals?.map((goalId: string) => ({
@@ -179,13 +177,13 @@ export function Dashboard() {
       )}
 
       {workoutStats.workoutsThisWeek > 0 && (
-        <Card className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0">
+        <Card className="bg-gradient-to-r from-[#F2C4DE] to-[#AED8F2] text-[#2a2438] border-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <Award className="w-12 h-12" />
               <div>
-                <h3 className="mb-1">Great work!</h3>
-                <p className="text-purple-100">
+                <h3 className="mb-1 font-bold">Great work!</h3>
+                <p className="opacity-90">
                   You've completed {workoutStats.workoutsThisWeek} workout{workoutStats.workoutsThisWeek !== 1 ? 's' : ''} this week. Keep up the momentum!
                 </p>
               </div>
