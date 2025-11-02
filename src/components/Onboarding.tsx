@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Checkbox } from './ui/checkbox';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
-import { Calendar } from './ui/calendar';
 import { Target, Dumbbell, CalendarDays, CheckCircle2 } from 'lucide-react';
 
 interface OnboardingProps {
@@ -16,26 +14,36 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
   const [fitnessLevel, setFitnessLevel] = useState('');
-  const [workoutDays, setWorkoutDays] = useState<Date[]>([]);
+  const [workoutDays, setWorkoutDays] = useState<string[]>([]);
 
   const goals = [
-    { id: 'lose-weight', label: 'Lose Weight', icon: '🎯' },
+    { id: 'lose-weight', label: 'Weight Loss', icon: '🎯' },
     { id: 'build-muscle', label: 'Build Muscle', icon: '💪' },
     { id: 'improve-endurance', label: 'Improve Endurance', icon: '🏃' },
-    { id: 'flexibility', label: 'Increase Flexibility', icon: '🧘' },
     { id: 'general-fitness', label: 'General Fitness', icon: '⭐' },
-    { id: 'sports-performance', label: 'Sports Performance', icon: '🏅' },
+    { id: 'strength', label: 'Build Strength', icon: '🏋️' },
+    { id: 'maintain-health', label: 'Maintain Health', icon: '❤️' },
   ];
 
   const equipment = [
-    { id: 'dumbbells', label: 'Dumbbells' },
-    { id: 'barbell', label: 'Barbell' },
-    { id: 'kettlebell', label: 'Kettlebell' },
-    { id: 'resistance-bands', label: 'Resistance Bands' },
-    { id: 'pull-up-bar', label: 'Pull-up Bar' },
-    { id: 'bench', label: 'Bench' },
-    { id: 'yoga-mat', label: 'Yoga Mat' },
-    { id: 'no-equipment', label: 'No Equipment (Bodyweight)' },
+    { id: 'dumbbells', label: 'Dumbbells', icon: '🏋️' },
+    { id: 'barbell', label: 'Barbell', icon: '🏋️' },
+    { id: 'kettlebell', label: 'Kettlebell', icon: '⚫' },
+    { id: 'resistance-bands', label: 'Resistance Bands', icon: '🎗️' },
+    { id: 'pull-up-bar', label: 'Pull-up Bar', icon: '🤸' },
+    { id: 'bench', label: 'Workout Bench', icon: '🛋️' },
+    { id: 'cardio-equipment', label: 'Cardio Equipment', icon: '🚴' },
+    { id: 'no-equipment', label: 'Bodyweight Only', icon: '🧘' },
+  ];
+
+  const weekDays = [
+    { id: 'monday', label: 'Monday', short: 'Mon' },
+    { id: 'tuesday', label: 'Tuesday', short: 'Tue' },
+    { id: 'wednesday', label: 'Wednesday', short: 'Wed' },
+    { id: 'thursday', label: 'Thursday', short: 'Thu' },
+    { id: 'friday', label: 'Friday', short: 'Fri' },
+    { id: 'saturday', label: 'Saturday', short: 'Sat' },
+    { id: 'sunday', label: 'Sunday', short: 'Sun' },
   ];
 
   const handleGoalToggle = (goalId: string) => {
@@ -47,6 +55,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const handleEquipmentToggle = (equipmentId: string) => {
     setSelectedEquipment((prev) =>
       prev.includes(equipmentId) ? prev.filter((id) => id !== equipmentId) : [...prev, equipmentId]
+    );
+  };
+
+  const handleDayToggle = (dayId: string) => {
+    setWorkoutDays((prev) =>
+      prev.includes(dayId) ? prev.filter((id) => id !== dayId) : [...prev, dayId]
     );
   };
 
@@ -74,52 +88,52 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl bg-slate-800/50 border-slate-700">
         <CardHeader>
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full">
               {[1, 2, 3].map((s) => (
                 <div
                   key={s}
-                  className={`h-2 w-24 rounded-full ${
-                    s <= step ? 'bg-blue-600' : 'bg-gray-200'
+                  className={`h-2 flex-1 rounded-full transition-all ${
+                    s <= step ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-slate-700'
                   }`}
                 />
               ))}
             </div>
           </div>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-white">
             {step === 1 && (
               <>
-                <Target className="w-6 h-6" />
+                <Target className="w-6 h-6 text-purple-400" />
                 Set Your Goals
               </>
             )}
             {step === 2 && (
               <>
-                <Dumbbell className="w-6 h-6" />
+                <Dumbbell className="w-6 h-6 text-purple-400" />
                 Available Equipment
               </>
             )}
             {step === 3 && (
               <>
-                <CalendarDays className="w-6 h-6" />
+                <CalendarDays className="w-6 h-6 text-purple-400" />
                 Weekly Schedule
               </>
             )}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-slate-400">
             {step === 1 && 'Tell us what you want to achieve and your current fitness level'}
             {step === 2 && 'Select the equipment you have access to'}
-            {step === 3 && 'Choose your preferred workout days'}
+            {step === 3 && 'Choose the days you want to work out'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h3 className="mb-4">What are your fitness goals?</h3>
+                <h3 className="mb-4 text-white">What are your fitness goals?</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {goals.map((goal) => (
                     <div
@@ -127,8 +141,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                       onClick={() => handleGoalToggle(goal.id)}
                       className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                         selectedGoals.includes(goal.id)
-                          ? 'border-blue-600 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-purple-500 bg-purple-500/20 text-white'
+                          : 'border-slate-700 hover:border-slate-600 bg-slate-900/50 text-slate-300'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -141,37 +155,37 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </div>
 
               <div>
-                <h3 className="mb-4">Current fitness level</h3>
+                <h3 className="mb-4 text-white">Current fitness level</h3>
                 <RadioGroup value={fitnessLevel} onValueChange={setFitnessLevel}>
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center space-x-2 p-3 border border-slate-700 rounded-lg hover:bg-slate-900/50 bg-slate-900/30">
                       <RadioGroupItem value="beginner" id="beginner" />
-                      <Label htmlFor="beginner" className="flex-1 cursor-pointer">
+                      <Label htmlFor="beginner" className="flex-1 cursor-pointer text-slate-300">
                         <div>
-                          <div>Beginner</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-white">Beginner</div>
+                          <div className="text-sm text-slate-400">
                             New to working out or getting back after a break
                           </div>
                         </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center space-x-2 p-3 border border-slate-700 rounded-lg hover:bg-slate-900/50 bg-slate-900/30">
                       <RadioGroupItem value="intermediate" id="intermediate" />
-                      <Label htmlFor="intermediate" className="flex-1 cursor-pointer">
+                      <Label htmlFor="intermediate" className="flex-1 cursor-pointer text-slate-300">
                         <div>
-                          <div>Intermediate</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-white">Intermediate</div>
+                          <div className="text-sm text-slate-400">
                             Regular exercise 2-3 times per week
                           </div>
                         </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center space-x-2 p-3 border border-slate-700 rounded-lg hover:bg-slate-900/50 bg-slate-900/30">
                       <RadioGroupItem value="advanced" id="advanced" />
-                      <Label htmlFor="advanced" className="flex-1 cursor-pointer">
+                      <Label htmlFor="advanced" className="flex-1 cursor-pointer text-slate-300">
                         <div>
-                          <div>Advanced</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-white">Advanced</div>
+                          <div className="text-sm text-slate-400">
                             Experienced with structured training programs
                           </div>
                         </div>
@@ -192,15 +206,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => handleEquipmentToggle(item.id)}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       selectedEquipment.includes(item.id)
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-purple-500 bg-purple-500/20 text-white'
+                        : 'border-slate-700 hover:border-slate-600 bg-slate-900/50 text-slate-300'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={selectedEquipment.includes(item.id)}
-                        onCheckedChange={() => handleEquipmentToggle(item.id)}
-                      />
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{item.icon}</span>
                       <span>{item.label}</span>
                     </div>
                   </div>
@@ -211,35 +222,47 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
           {step === 3 && (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-400">
                 Select the days you'd like to work out. We recommend 3-5 days per week.
               </p>
-              <div className="flex justify-center">
-                <Calendar
-                  mode="multiple"
-                  selected={workoutDays}
-                  onSelect={(dates) => setWorkoutDays((dates as Date[]) || [])}
-                  className="rounded-md border"
-                />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {weekDays.map((day) => (
+                  <div
+                    key={day.id}
+                    onClick={() => handleDayToggle(day.id)}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all text-center ${
+                      workoutDays.includes(day.id)
+                        ? 'border-purple-500 bg-purple-500/20 text-white'
+                        : 'border-slate-700 hover:border-slate-600 bg-slate-900/50 text-slate-300'
+                    }`}
+                  >
+                    <div className="text-lg font-semibold mb-1">{day.short}</div>
+                    <div className="text-xs opacity-75">{day.label}</div>
+                  </div>
+                ))}
               </div>
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-sm">
+              <div className="bg-purple-500/20 border border-purple-500/30 p-4 rounded-lg">
+                <p className="text-sm text-purple-200">
                   <strong>{workoutDays.length} workout days selected</strong>
                 </p>
               </div>
             </div>
           )}
 
-          <div className="flex justify-between mt-6 pt-6 border-t">
+          <div className="flex justify-between mt-6 pt-6 border-t border-slate-700">
             {step > 1 && (
-              <Button variant="outline" onClick={() => setStep(step - 1)}>
+              <Button
+                variant="outline"
+                onClick={() => setStep(step - 1)}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              >
                 Back
               </Button>
             )}
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="ml-auto"
+              className="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
             >
               {step === 3 ? (
                 <>
