@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Auth } from './components/Auth';
 import { Onboarding } from './components/Onboarding';
 import { Dashboard } from './components/Dashboard';
 import { WorkoutGeneration } from './components/WorkoutGeneration';
@@ -6,16 +7,19 @@ import { FormCheck } from './components/FormCheck';
 import { RecoveryTracking } from './components/RecoveryTracking';
 import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { WorkoutHistory } from './components/WorkoutHistory';
-import { NutritionTracking } from './components/NutritionTracking';
 import { PersonalRecords } from './components/PersonalRecords';
 import { ActiveWorkout } from './components/ActiveWorkout';
-import { Home, LayoutDashboard, Sparkles, Camera, Heart, Menu, X, BookOpen, History, Apple, Trophy, Play } from 'lucide-react';
+import { Home, LayoutDashboard, Sparkles, Camera, Heart, Menu, X, BookOpen, History, Trophy, Play } from 'lucide-react';
 import { Button } from './components/ui/button';
 
-type View = 'onboarding' | 'home' | 'dashboard' | 'workout' | 'form-check' | 'recovery' | 'exercise-library' | 'history' | 'nutrition' | 'records' | 'active-workout';
+type View = 'auth' | 'onboarding' | 'home' | 'dashboard' | 'workout' | 'form-check' | 'recovery' | 'exercise-library' | 'history' | 'records' | 'active-workout';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<View>(() => {
+    // Check if user is authenticated
+    const authData = localStorage.getItem('userAuth');
+    if (!authData) return 'auth';
+
     // Check if onboarding is completed
     const onboardingData = localStorage.getItem('userOnboarding');
     return onboardingData ? 'home' : 'onboarding';
@@ -31,29 +35,36 @@ export default function App() {
     { id: 'recovery' as View, label: 'Recovery', icon: Heart },
     { id: 'exercise-library' as View, label: 'Exercises', icon: BookOpen },
     { id: 'history' as View, label: 'History', icon: History },
-    { id: 'nutrition' as View, label: 'Nutrition', icon: Apple },
     { id: 'records' as View, label: 'Records', icon: Trophy },
   ];
+
+  const handleCompleteAuth = () => {
+    setCurrentView('onboarding');
+  };
 
   const handleCompleteOnboarding = () => {
     setCurrentView('home');
   };
+
+  if (currentView === 'auth') {
+    return <Auth onComplete={handleCompleteAuth} />;
+  }
 
   if (currentView === 'onboarding') {
     return <Onboarding onComplete={handleCompleteOnboarding} />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50">
+      <header className="bg-card border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
                 <span className="text-white text-xl font-bold">✓</span>
               </div>
-              <h1 className="text-xl font-bold">FitPro</h1>
+              <h1 className="text-xl font-bold text-foreground">checkpoint</h1>
             </div>
 
             {/* Desktop Navigation */}
@@ -116,120 +127,98 @@ export default function App() {
         {currentView === 'home' && (
           <div className="space-y-6">
             <div>
-              <h1 className="mb-2">Welcome back!</h1>
-              <p className="text-gray-600">Ready to crush your fitness goals today?</p>
+              <h1 className="mb-2 text-foreground">Welcome back!</h1>
+              <p className="text-muted-foreground">Ready to crush your fitness goals today?</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div
                 onClick={() => setCurrentView('active-workout')}
-                className="p-6 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-lg cursor-pointer transition-all hover:shadow-lg"
+                className="p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-lg cursor-pointer transition-all hover:shadow-lg hover:scale-105"
               >
                 <Play className="w-12 h-12 mb-4" />
                 <h3 className="mb-2">Start Workout</h3>
-                <p className="text-sm text-blue-100">
+                <p className="text-sm text-purple-100">
                   Begin tracking your current workout session
                 </p>
               </div>
 
               <div
                 onClick={() => setCurrentView('workout')}
-                className="p-6 bg-white rounded-lg border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all"
+                className="p-6 bg-card rounded-lg border-2 border-border hover:border-primary cursor-pointer transition-all hover:scale-105"
               >
-                <Sparkles className="w-12 h-12 text-blue-600 mb-4" />
-                <h3 className="mb-2">Generate Workout</h3>
-                <p className="text-sm text-gray-600">
+                <Sparkles className="w-12 h-12 text-primary mb-4" />
+                <h3 className="mb-2 text-foreground">Generate Workout</h3>
+                <p className="text-sm text-muted-foreground">
                   Create a custom workout based on your goals
                 </p>
               </div>
 
               <div
                 onClick={() => setCurrentView('form-check')}
-                className="p-6 bg-white rounded-lg border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all"
+                className="p-6 bg-card rounded-lg border-2 border-border hover:border-primary cursor-pointer transition-all hover:scale-105"
               >
-                <Camera className="w-12 h-12 text-green-600 mb-4" />
-                <h3 className="mb-2">Check Your Form</h3>
-                <p className="text-sm text-gray-600">
+                <Camera className="w-12 h-12 text-green-400 mb-4" />
+                <h3 className="mb-2 text-foreground">Check Your Form</h3>
+                <p className="text-sm text-muted-foreground">
                   Upload a video for AI-powered form analysis
                 </p>
               </div>
 
               <div
                 onClick={() => setCurrentView('recovery')}
-                className="p-6 bg-white rounded-lg border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all"
+                className="p-6 bg-card rounded-lg border-2 border-border hover:border-primary cursor-pointer transition-all hover:scale-105"
               >
-                <Heart className="w-12 h-12 text-red-600 mb-4" />
-                <h3 className="mb-2">Track Recovery</h3>
-                <p className="text-sm text-gray-600">
+                <Heart className="w-12 h-12 text-red-400 mb-4" />
+                <h3 className="mb-2 text-foreground">Track Recovery</h3>
+                <p className="text-sm text-muted-foreground">
                   Monitor your recovery and adjust workouts
                 </p>
               </div>
 
               <div
-                onClick={() => setCurrentView('nutrition')}
-                className="p-6 bg-white rounded-lg border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all"
-              >
-                <Apple className="w-12 h-12 text-orange-600 mb-4" />
-                <h3 className="mb-2">Track Nutrition</h3>
-                <p className="text-sm text-gray-600">
-                  Log your meals and monitor your macros
-                </p>
-              </div>
-
-              <div
                 onClick={() => setCurrentView('dashboard')}
-                className="p-6 bg-white rounded-lg border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all"
+                className="p-6 bg-card rounded-lg border-2 border-border hover:border-primary cursor-pointer transition-all hover:scale-105"
               >
-                <LayoutDashboard className="w-12 h-12 text-purple-600 mb-4" />
-                <h3 className="mb-2">View Progress</h3>
-                <p className="text-sm text-gray-600">
+                <LayoutDashboard className="w-12 h-12 text-primary mb-4" />
+                <h3 className="mb-2 text-foreground">View Progress</h3>
+                <p className="text-sm text-muted-foreground">
                   See your stats, achievements, and trends
                 </p>
               </div>
 
               <div
                 onClick={() => setCurrentView('records')}
-                className="p-6 bg-white rounded-lg border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all"
+                className="p-6 bg-card rounded-lg border-2 border-border hover:border-primary cursor-pointer transition-all hover:scale-105"
               >
-                <Trophy className="w-12 h-12 text-yellow-600 mb-4" />
-                <h3 className="mb-2">Personal Records</h3>
-                <p className="text-sm text-gray-600">
+                <Trophy className="w-12 h-12 text-yellow-400 mb-4" />
+                <h3 className="mb-2 text-foreground">Personal Records</h3>
+                <p className="text-sm text-muted-foreground">
                   Track your PRs and celebrate milestones
                 </p>
               </div>
 
               <div
                 onClick={() => setCurrentView('exercise-library')}
-                className="p-6 bg-white rounded-lg border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all"
+                className="p-6 bg-card rounded-lg border-2 border-border hover:border-primary cursor-pointer transition-all hover:scale-105"
               >
-                <BookOpen className="w-12 h-12 text-indigo-600 mb-4" />
-                <h3 className="mb-2">Exercise Library</h3>
-                <p className="text-sm text-gray-600">
+                <BookOpen className="w-12 h-12 text-primary mb-4" />
+                <h3 className="mb-2 text-foreground">Exercise Library</h3>
+                <p className="text-sm text-muted-foreground">
                   Browse exercises with detailed instructions
                 </p>
               </div>
 
               <div
                 onClick={() => setCurrentView('history')}
-                className="p-6 bg-white rounded-lg border-2 border-transparent hover:border-blue-600 cursor-pointer transition-all"
+                className="p-6 bg-card rounded-lg border-2 border-border hover:border-primary cursor-pointer transition-all hover:scale-105"
               >
-                <History className="w-12 h-12 text-gray-600 mb-4" />
-                <h3 className="mb-2">Workout History</h3>
-                <p className="text-sm text-gray-600">
+                <History className="w-12 h-12 text-muted-foreground mb-4" />
+                <h3 className="mb-2 text-foreground">Workout History</h3>
+                <p className="text-sm text-muted-foreground">
                   Review your past workout sessions
                 </p>
               </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg p-6">
-              <h3 className="mb-2">Today's Workout Recommendation</h3>
-              <p className="mb-4">
-                Based on your recovery score (85%), we recommend a high-intensity upper body
-                workout today.
-              </p>
-              <Button variant="secondary" onClick={() => setCurrentView('workout')}>
-                Generate Workout
-              </Button>
             </div>
           </div>
         )}
@@ -240,7 +229,6 @@ export default function App() {
         {currentView === 'recovery' && <RecoveryTracking />}
         {currentView === 'exercise-library' && <ExerciseLibrary />}
         {currentView === 'history' && <WorkoutHistory />}
-        {currentView === 'nutrition' && <NutritionTracking />}
         {currentView === 'records' && <PersonalRecords />}
         {currentView === 'active-workout' && <ActiveWorkout />}
       </main>
