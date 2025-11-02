@@ -17,12 +17,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const [workoutDays, setWorkoutDays] = useState<string[]>([]);
 
   const goals = [
-    { id: 'lose-weight', label: 'Weight Loss', icon: '🎯' },
     { id: 'build-muscle', label: 'Build Muscle', icon: '💪' },
-    { id: 'improve-endurance', label: 'Improve Endurance', icon: '🏃' },
-    { id: 'general-fitness', label: 'General Fitness', icon: '⭐' },
     { id: 'strength', label: 'Build Strength', icon: '🏋️' },
-    { id: 'maintain-health', label: 'Maintain Health', icon: '❤️' },
+    { id: 'improve-endurance', label: 'Improve Endurance', icon: '🏃' },
+    { id: 'stay-active', label: 'Stay Active', icon: '⭐' },
   ];
 
   const equipment = [
@@ -88,8 +86,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl bg-slate-800/50 border-slate-700">
+    <div className="min-h-screen bg-gradient-to-br from-[#2a2438] via-[#3d3451] to-[#2a2438] flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl bg-card/80 border-border backdrop-blur">
         <CardHeader>
           <div className="flex items-center gap-2 mb-4">
             <div className="flex gap-2 w-full">
@@ -97,33 +95,33 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 <div
                   key={s}
                   className={`h-2 flex-1 rounded-full transition-all ${
-                    s <= step ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-slate-700'
+                    s <= step ? 'bg-gradient-to-r from-[#F2C4DE] to-[#AED8F2]' : 'bg-muted'
                   }`}
                 />
               ))}
             </div>
           </div>
-          <CardTitle className="flex items-center gap-2 text-white">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             {step === 1 && (
               <>
-                <Target className="w-6 h-6 text-purple-400" />
+                <Target className="w-6 h-6 text-primary" />
                 Set Your Goals
               </>
             )}
             {step === 2 && (
               <>
-                <Dumbbell className="w-6 h-6 text-purple-400" />
+                <Dumbbell className="w-6 h-6 text-primary" />
                 Available Equipment
               </>
             )}
             {step === 3 && (
               <>
-                <CalendarDays className="w-6 h-6 text-purple-400" />
+                <CalendarDays className="w-6 h-6 text-primary" />
                 Weekly Schedule
               </>
             )}
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-muted-foreground">
             {step === 1 && 'Tell us what you want to achieve and your current fitness level'}
             {step === 2 && 'Select the equipment you have access to'}
             {step === 3 && 'Choose the days you want to work out'}
@@ -133,7 +131,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h3 className="mb-4 text-white">What are your fitness goals?</h3>
+                <h3 className="mb-4 text-foreground">What are your fitness goals?</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {goals.map((goal) => (
                     <div
@@ -141,8 +139,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                       onClick={() => handleGoalToggle(goal.id)}
                       className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                         selectedGoals.includes(goal.id)
-                          ? 'border-purple-500 bg-purple-500/20 text-white'
-                          : 'border-slate-700 hover:border-slate-600 bg-slate-900/50 text-slate-300'
+                          ? 'border-primary bg-primary/20 text-foreground'
+                          : 'border-border hover:border-primary/50 bg-muted/30 text-muted-foreground'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -155,37 +153,37 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </div>
 
               <div>
-                <h3 className="mb-4 text-white">Current fitness level</h3>
+                <h3 className="mb-4 text-foreground">Current fitness level</h3>
                 <RadioGroup value={fitnessLevel} onValueChange={setFitnessLevel}>
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2 p-3 border border-slate-700 rounded-lg hover:bg-slate-900/50 bg-slate-900/30">
+                    <div className="flex items-center space-x-2 p-3 border border-border rounded-lg hover:bg-muted/50 bg-muted/30">
                       <RadioGroupItem value="beginner" id="beginner" />
-                      <Label htmlFor="beginner" className="flex-1 cursor-pointer text-slate-300">
+                      <Label htmlFor="beginner" className="flex-1 cursor-pointer text-muted-foreground">
                         <div>
-                          <div className="text-white">Beginner</div>
-                          <div className="text-sm text-slate-400">
+                          <div className="text-foreground">Beginner</div>
+                          <div className="text-sm text-muted-foreground">
                             New to working out or getting back after a break
                           </div>
                         </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 p-3 border border-slate-700 rounded-lg hover:bg-slate-900/50 bg-slate-900/30">
+                    <div className="flex items-center space-x-2 p-3 border border-border rounded-lg hover:bg-muted/50 bg-muted/30">
                       <RadioGroupItem value="intermediate" id="intermediate" />
-                      <Label htmlFor="intermediate" className="flex-1 cursor-pointer text-slate-300">
+                      <Label htmlFor="intermediate" className="flex-1 cursor-pointer text-muted-foreground">
                         <div>
-                          <div className="text-white">Intermediate</div>
-                          <div className="text-sm text-slate-400">
+                          <div className="text-foreground">Intermediate</div>
+                          <div className="text-sm text-muted-foreground">
                             Regular exercise 2-3 times per week
                           </div>
                         </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 p-3 border border-slate-700 rounded-lg hover:bg-slate-900/50 bg-slate-900/30">
+                    <div className="flex items-center space-x-2 p-3 border border-border rounded-lg hover:bg-muted/50 bg-muted/30">
                       <RadioGroupItem value="advanced" id="advanced" />
-                      <Label htmlFor="advanced" className="flex-1 cursor-pointer text-slate-300">
+                      <Label htmlFor="advanced" className="flex-1 cursor-pointer text-muted-foreground">
                         <div>
-                          <div className="text-white">Advanced</div>
-                          <div className="text-sm text-slate-400">
+                          <div className="text-foreground">Advanced</div>
+                          <div className="text-sm text-muted-foreground">
                             Experienced with structured training programs
                           </div>
                         </div>
@@ -206,8 +204,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => handleEquipmentToggle(item.id)}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       selectedEquipment.includes(item.id)
-                        ? 'border-purple-500 bg-purple-500/20 text-white'
-                        : 'border-slate-700 hover:border-slate-600 bg-slate-900/50 text-slate-300'
+                        ? 'border-primary bg-primary/20 text-foreground'
+                        : 'border-border hover:border-primary/50 bg-muted/30 text-muted-foreground'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -222,7 +220,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
           {step === 3 && (
             <div className="space-y-4">
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 Select the days you'd like to work out. We recommend 3-5 days per week.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -232,8 +230,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     onClick={() => handleDayToggle(day.id)}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all text-center ${
                       workoutDays.includes(day.id)
-                        ? 'border-purple-500 bg-purple-500/20 text-white'
-                        : 'border-slate-700 hover:border-slate-600 bg-slate-900/50 text-slate-300'
+                        ? 'border-primary bg-primary/20 text-foreground'
+                        : 'border-border hover:border-primary/50 bg-muted/30 text-muted-foreground'
                     }`}
                   >
                     <div className="text-lg font-semibold mb-1">{day.short}</div>
@@ -241,20 +239,20 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   </div>
                 ))}
               </div>
-              <div className="bg-purple-500/20 border border-purple-500/30 p-4 rounded-lg">
-                <p className="text-sm text-purple-200">
+              <div className="bg-primary/20 border border-primary/30 p-4 rounded-lg">
+                <p className="text-sm text-foreground">
                   <strong>{workoutDays.length} workout days selected</strong>
                 </p>
               </div>
             </div>
           )}
 
-          <div className="flex justify-between mt-6 pt-6 border-t border-slate-700">
+          <div className="flex justify-between mt-6 pt-6 border-t border-border">
             {step > 1 && (
               <Button
                 variant="outline"
                 onClick={() => setStep(step - 1)}
-                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                className="border-border text-foreground hover:bg-muted"
               >
                 Back
               </Button>
@@ -262,7 +260,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="ml-auto bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              className="ml-auto bg-gradient-to-r from-[#F2C4DE] to-[#AED8F2] hover:opacity-90 text-[#2a2438] font-medium"
             >
               {step === 3 ? (
                 <>

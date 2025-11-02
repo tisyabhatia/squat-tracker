@@ -26,14 +26,14 @@ export function Auth({ onComplete }: AuthProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700">
+    <div className="min-h-screen bg-gradient-to-br from-[#2a2438] via-[#3d3451] to-[#2a2438] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-card/80 border-border backdrop-blur">
         <CardHeader className="text-center space-y-2">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-2">
-            <span className="text-white text-3xl font-bold">✓</span>
+          <div className="w-16 h-16 bg-gradient-to-br from-[#F2C4DE] to-[#AED8F2] rounded-2xl flex items-center justify-center mx-auto mb-2">
+            <span className="text-[#2a2438] text-3xl font-bold">✓</span>
           </div>
-          <CardTitle className="text-3xl text-white">checkpoint</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle className="text-3xl text-foreground">checkpoint</CardTitle>
+          <CardDescription className="text-muted-foreground">
             {isLogin ? 'Welcome back! Sign in to continue' : 'Create your account to get started'}
           </CardDescription>
         </CardHeader>
@@ -41,7 +41,7 @@ export function Auth({ onComplete }: AuthProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-slate-300">Name</Label>
+                <Label htmlFor="name" className="text-foreground">Name</Label>
                 <Input
                   id="name"
                   type="text"
@@ -49,12 +49,12 @@ export function Auth({ onComplete }: AuthProps) {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required={!isLogin}
-                  className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
+                  className="bg-input border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-300">Email</Label>
+              <Label htmlFor="email" className="text-foreground">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -62,11 +62,11 @@ export function Auth({ onComplete }: AuthProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
+                className="bg-input border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-300">Password</Label>
+              <Label htmlFor="password" className="text-foreground">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -74,12 +74,12 @@ export function Auth({ onComplete }: AuthProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
+                className="bg-input border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+              className="w-full bg-gradient-to-r from-[#F2C4DE] to-[#AED8F2] hover:opacity-90 text-[#2a2438] font-medium"
             >
               {isLogin ? 'Sign In' : 'Sign Up'}
             </Button>
@@ -88,7 +88,7 @@ export function Auth({ onComplete }: AuthProps) {
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-slate-400 hover:text-slate-300 transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>

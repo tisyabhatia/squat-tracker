@@ -3,23 +3,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { Play, Pause, Check, Clock, Dumbbell, Plus, Minus } from 'lucide-react';
+import { Play, Pause, Check, Clock, Dumbbell, ChevronRight } from 'lucide-react';
+
+interface SetData {
+  weight: number;
+  reps: number;
+  timestamp: string;
+}
+
+interface Exercise {
+  name: string;
+  sets: number;
+  targetReps: string;
+  completedSets: SetData[];
+}
 
 export function ActiveWorkout() {
   const [isActive, setIsActive] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
 
-  const [workout] = useState({
+  const [workout, setWorkout] = useState<{ name: string; exercises: Exercise[] }>({
     name: 'Full Body Strength',
     exercises: [
-      { name: 'Barbell Squat', sets: 4, targetReps: '8-10', completedSets: [] as any[] },
-      { name: 'Bench Press', sets: 4, targetReps: '8-10', completedSets: [] as any[] },
-      { name: 'Bent Over Rows', sets: 4, targetReps: '10-12', completedSets: [] as any[] },
-      { name: 'Overhead Press', sets: 3, targetReps: '8-10', completedSets: [] as any[] },
-      { name: 'Romanian Deadlifts', sets: 3, targetReps: '10-12', completedSets: [] as any[] },
+      { name: 'Barbell Squat', sets: 4, targetReps: '8-10', completedSets: [] },
+      { name: 'Bench Press', sets: 4, targetReps: '8-10', completedSets: [] },
+      { name: 'Bent Over Rows', sets: 4, targetReps: '10-12', completedSets: [] },
+      { name: 'Overhead Press', sets: 3, targetReps: '8-10', completedSets: [] },
+      { name: 'Romanian Deadlifts', sets: 3, targetReps: '10-12', completedSets: [] },
     ]
   });
+
+  const [currentWeight, setCurrentWeight] = useState('');
+  const [currentReps, setCurrentReps] = useState('');
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -45,42 +61,96 @@ export function ActiveWorkout() {
     setIsActive(!isActive);
   };
 
-  const handleLogSet = (exerciseIndex: number, weight: number, reps: number) => {
-    workout.exercises[exerciseIndex].completedSets.push({
+  const handleLogSet = (exerciseIndex: number) => {
+    const weight = parseFloat(currentWeight) || 0;
+    const reps = parseInt(currentReps) || 0;
+
+    if (weight === 0 || reps === 0) {
+      alert('Please enter both weight and reps');
+      return;
+    }
+
+    const newWorkout = { ...workout };
+    newWorkout.exercises[exerciseIndex].completedSets.push({
       weight,
       reps,
       timestamp: new Date().toISOString()
     });
+    setWorkout(newWorkout);
+    setCurrentWeight('');
+    setCurrentReps('');
+
+    // Auto-advance to next exercise if all sets are complete
+    if (newWorkout.exercises[exerciseIndex].completedSets.length === newWorkout.exercises[exerciseIndex].sets) {
+      if (exerciseIndex < workout.exercises.length - 1) {
+        setTimeout(() => setCurrentExerciseIndex(exerciseIndex + 1), 500);
+      }
+    }
   };
 
   const handleFinishWorkout = () => {
+    setIsActive(false);
+    // Save workout data to localStorage
+    const workoutData = {
+      name: workout.name,
+      exercises: workout.exercises,
+      duration: elapsedTime,
+      completedAt: new Date().toISOString()
+    };
+
+    // Save to workout history
+    const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+    history.push(workoutData);
+    localStorage.setItem('workoutHistory', JSON.stringify(history));
+
+    // Update workout stats
+    const stats = JSON.parse(localStorage.getItem('workoutStats') || '{"workoutsThisWeek": 0, "totalMinutes": 0, "currentStreak": 0}');
+    stats.workoutsThisWeek += 1;
+    stats.totalMinutes += Math.floor(elapsedTime / 60);
+    stats.currentStreak += 1;
+    localStorage.setItem('workoutStats', JSON.stringify(stats));
+
     alert('Workout completed! Great job!');
-    // Here you would save the workout data
+
+    // Reset workout
+    setElapsedTime(0);
+    setCurrentExerciseIndex(0);
+    const resetWorkout = {
+      name: 'Full Body Strength',
+      exercises: [
+        { name: 'Barbell Squat', sets: 4, targetReps: '8-10', completedSets: [] },
+        { name: 'Bench Press', sets: 4, targetReps: '8-10', completedSets: [] },
+        { name: 'Bent Over Rows', sets: 4, targetReps: '10-12', completedSets: [] },
+        { name: 'Overhead Press', sets: 3, targetReps: '8-10', completedSets: [] },
+        { name: 'Romanian Deadlifts', sets: 3, targetReps: '10-12', completedSets: [] },
+      ]
+    };
+    setWorkout(resetWorkout);
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="mb-2">Active Workout</h1>
-        <p className="text-gray-600">
+        <h1 className="mb-2 text-foreground">Active Workout</h1>
+        <p className="text-muted-foreground">
           Track your sets and reps in real-time
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card>
+          <Card className="bg-card border-border">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>{workout.name}</CardTitle>
-                  <CardDescription className="mt-2">
+                  <CardTitle className="text-foreground">{workout.name}</CardTitle>
+                  <CardDescription className="mt-2 text-muted-foreground">
                     {completedSets} / {totalSets} sets completed
                   </CardDescription>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold">{formatTime(elapsedTime)}</div>
-                  <div className="text-sm text-gray-600">Duration</div>
+                  <div className="text-3xl font-bold text-foreground">{formatTime(elapsedTime)}</div>
+                  <div className="text-sm text-muted-foreground">Duration</div>
                 </div>
               </div>
             </CardHeader>
@@ -119,14 +189,14 @@ export function ActiveWorkout() {
                     key={exerciseIndex}
                     className={`p-4 border-2 rounded-lg transition-all ${
                       currentExerciseIndex === exerciseIndex
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border bg-card'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <h3 className="mb-1">{exercise.name}</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="mb-1 text-foreground">{exercise.name}</h3>
+                        <p className="text-sm text-muted-foreground">
                           {exercise.sets} sets × {exercise.targetReps} reps
                         </p>
                       </div>
@@ -135,43 +205,34 @@ export function ActiveWorkout() {
                       </Badge>
                     </div>
 
-                    {exercise.completedSets.length < exercise.sets && (
-                      <div className="mt-3 p-3 bg-white rounded-lg border">
-                        <p className="text-sm mb-2">Log Set {exercise.completedSets.length + 1}</p>
+                    {exercise.completedSets.length < exercise.sets && currentExerciseIndex === exerciseIndex && (
+                      <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border">
+                        <p className="text-sm mb-2 text-foreground">Log Set {exercise.completedSets.length + 1}</p>
                         <div className="flex gap-2">
                           <div className="flex items-center gap-1 flex-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {}}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
                             <Input
                               type="number"
                               placeholder="Weight"
-                              className="text-center"
+                              value={currentWeight}
+                              onChange={(e) => setCurrentWeight(e.target.value)}
+                              className="text-center bg-input text-foreground"
                             />
-                            <span className="text-sm text-gray-600">lbs</span>
+                            <span className="text-sm text-muted-foreground">lbs</span>
                           </div>
                           <div className="flex items-center gap-1 flex-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {}}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
                             <Input
                               type="number"
                               placeholder="Reps"
-                              className="text-center"
+                              value={currentReps}
+                              onChange={(e) => setCurrentReps(e.target.value)}
+                              className="text-center bg-input text-foreground"
                             />
-                            <span className="text-sm text-gray-600">reps</span>
+                            <span className="text-sm text-muted-foreground">reps</span>
                           </div>
                           <Button
                             size="sm"
-                            onClick={() => handleLogSet(exerciseIndex, 135, 10)}
+                            onClick={() => handleLogSet(exerciseIndex)}
+                            className="bg-gradient-to-r from-[#F2C4DE] to-[#AED8F2] hover:opacity-90 text-[#2a2438]"
                           >
                             <Check className="w-4 h-4" />
                           </Button>
@@ -184,16 +245,26 @@ export function ActiveWorkout() {
                         {exercise.completedSets.map((set, setIndex) => (
                           <div
                             key={setIndex}
-                            className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded"
+                            className="flex items-center justify-between text-sm p-2 bg-accent/20 rounded"
                           >
-                            <span className="text-gray-600">Set {setIndex + 1}</span>
-                            <span>
+                            <span className="text-muted-foreground">Set {setIndex + 1}</span>
+                            <span className="text-foreground">
                               {set.weight} lbs × {set.reps} reps
                             </span>
-                            <Check className="w-4 h-4 text-green-600" />
+                            <Check className="w-4 h-4 text-accent" />
                           </div>
                         ))}
                       </div>
+                    )}
+
+                    {exercise.completedSets.length === exercise.sets && exerciseIndex < workout.exercises.length - 1 && (
+                      <Button
+                        variant="ghost"
+                        className="w-full mt-3"
+                        onClick={() => setCurrentExerciseIndex(exerciseIndex + 1)}
+                      >
+                        Next Exercise <ChevronRight className="w-4 h-4 ml-2" />
+                      </Button>
                     )}
                   </div>
                 ))}
@@ -203,17 +274,17 @@ export function ActiveWorkout() {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Clock className="w-5 h-5 text-primary" />
                 Timer
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center mb-4">
-                <div className="text-5xl font-bold mb-2">{formatTime(elapsedTime)}</div>
-                <p className="text-sm text-gray-600">Total workout time</p>
+                <div className="text-5xl font-bold mb-2 text-foreground">{formatTime(elapsedTime)}</div>
+                <p className="text-sm text-muted-foreground">Total workout time</p>
               </div>
               <Button
                 variant="outline"
@@ -225,48 +296,30 @@ export function ActiveWorkout() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Dumbbell className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Dumbbell className="w-5 h-5 text-primary" />
                 Workout Summary
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Exercises</span>
-                <span className="text-sm font-semibold">{workout.exercises.length}</span>
+                <span className="text-sm text-muted-foreground">Exercises</span>
+                <span className="text-sm font-semibold text-foreground">{workout.exercises.length}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Total Sets</span>
-                <span className="text-sm font-semibold">{totalSets}</span>
+                <span className="text-sm text-muted-foreground">Total Sets</span>
+                <span className="text-sm font-semibold text-foreground">{totalSets}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Completed</span>
-                <span className="text-sm font-semibold">{completedSets}</span>
+                <span className="text-sm text-muted-foreground">Completed</span>
+                <span className="text-sm font-semibold text-foreground">{completedSets}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Remaining</span>
-                <span className="text-sm font-semibold">{totalSets - completedSets}</span>
+                <span className="text-sm text-muted-foreground">Remaining</span>
+                <span className="text-sm font-semibold text-foreground">{totalSets - completedSets}</span>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Exercise
-              </Button>
-              <Button variant="outline" className="w-full">
-                Skip Exercise
-              </Button>
-              <Button variant="destructive" className="w-full">
-                End Workout
-              </Button>
             </CardContent>
           </Card>
         </div>
