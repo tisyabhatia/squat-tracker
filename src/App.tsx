@@ -22,6 +22,16 @@ export default function App() {
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Safely get workout stats
+  const getWorkoutStats = () => {
+    try {
+      const stats = localStorage.getItem('workoutStats');
+      return stats ? JSON.parse(stats) : { currentStreak: 0, workoutsThisWeek: 0, totalMinutes: 0 };
+    } catch {
+      return { currentStreak: 0, workoutsThisWeek: 0, totalMinutes: 0 };
+    }
+  };
+
   const navigation = [
     { id: 'home' as View, label: 'Home', icon: Home },
     { id: 'active-workout' as View, label: 'Workout', icon: Play },
@@ -52,10 +62,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#F2C4DE] to-[#AED8F2] rounded-2xl flex items-center justify-center">
-                <span className="text-[#2a2438] text-xl font-bold">✓</span>
-              </div>
-              <h1 className="text-xl font-bold text-foreground">checkpoint</h1>
+              <h1 className="text-2xl font-bold text-foreground">checkpoint</h1>
             </div>
 
             {/* Desktop Navigation */}
@@ -127,7 +134,7 @@ export default function App() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm opacity-75 mb-1">Current Streak</p>
-                  <p className="text-4xl font-bold">{JSON.parse(localStorage.getItem('workoutStats') || '{"currentStreak": 0}').currentStreak} days</p>
+                  <p className="text-4xl font-bold">{getWorkoutStats().currentStreak} days</p>
                 </div>
                 <div className="text-6xl">🔥</div>
               </div>
