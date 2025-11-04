@@ -3,183 +3,77 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Search, Dumbbell, Info, Play } from 'lucide-react';
+import { Search, Dumbbell, Info, Star } from 'lucide-react';
+import { useApp } from '../contexts/AppContext';
+import { ExerciseCategory } from '../types';
 
 export function ExerciseLibrary() {
+  const { exercises } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const categories = ['all', 'chest', 'back', 'legs', 'shoulders', 'arms', 'core', 'cardio'];
-
-  const exercises = [
-    {
-      id: 1,
-      name: 'Barbell Squat',
-      category: 'legs',
-      difficulty: 'Intermediate',
-      muscleGroups: ['Quadriceps', 'Glutes', 'Hamstrings'],
-      equipment: ['Barbell', 'Rack'],
-      description: 'A compound exercise targeting the lower body with emphasis on quadriceps and glutes.',
-      instructions: [
-        'Position the bar on your upper back',
-        'Stand with feet shoulder-width apart',
-        'Descend by bending knees and hips',
-        'Keep chest up and core tight',
-        'Drive through heels to return to standing'
-      ]
-    },
-    {
-      id: 2,
-      name: 'Bench Press',
-      category: 'chest',
-      difficulty: 'Intermediate',
-      muscleGroups: ['Chest', 'Triceps', 'Shoulders'],
-      equipment: ['Barbell', 'Bench'],
-      description: 'Classic upper body compound movement targeting the chest.',
-      instructions: [
-        'Lie flat on bench with feet on floor',
-        'Grip bar slightly wider than shoulders',
-        'Lower bar to mid-chest',
-        'Press bar up until arms are extended',
-        'Keep shoulder blades retracted'
-      ]
-    },
-    {
-      id: 3,
-      name: 'Deadlift',
-      category: 'back',
-      difficulty: 'Advanced',
-      muscleGroups: ['Back', 'Glutes', 'Hamstrings', 'Traps'],
-      equipment: ['Barbell'],
-      description: 'Full body compound exercise with emphasis on posterior chain.',
-      instructions: [
-        'Stand with feet hip-width apart',
-        'Grip bar just outside legs',
-        'Keep back straight and chest up',
-        'Drive through heels to stand',
-        'Lower bar with control'
-      ]
-    },
-    {
-      id: 4,
-      name: 'Pull-ups',
-      category: 'back',
-      difficulty: 'Intermediate',
-      muscleGroups: ['Lats', 'Biceps', 'Upper Back'],
-      equipment: ['Pull-up Bar'],
-      description: 'Bodyweight exercise for upper back and arm development.',
-      instructions: [
-        'Hang from bar with hands shoulder-width',
-        'Pull body up until chin over bar',
-        'Lower with control',
-        'Keep core engaged',
-        'Avoid swinging'
-      ]
-    },
-    {
-      id: 5,
-      name: 'Overhead Press',
-      category: 'shoulders',
-      difficulty: 'Intermediate',
-      muscleGroups: ['Shoulders', 'Triceps', 'Core'],
-      equipment: ['Barbell'],
-      description: 'Compound movement for shoulder strength and stability.',
-      instructions: [
-        'Start with bar at shoulder height',
-        'Press bar overhead',
-        'Lock out arms at top',
-        'Lower with control',
-        'Keep core tight throughout'
-      ]
-    },
-    {
-      id: 6,
-      name: 'Plank',
-      category: 'core',
-      difficulty: 'Beginner',
-      muscleGroups: ['Core', 'Shoulders', 'Glutes'],
-      equipment: ['None'],
-      description: 'Isometric core strengthening exercise.',
-      instructions: [
-        'Start in push-up position on forearms',
-        'Keep body in straight line',
-        'Engage core and glutes',
-        'Hold position',
-        'Breathe normally'
-      ]
-    },
-    {
-      id: 7,
-      name: 'Running',
-      category: 'cardio',
-      difficulty: 'Beginner',
-      muscleGroups: ['Legs', 'Cardiovascular'],
-      equipment: ['None'],
-      description: 'Cardiovascular exercise for endurance and fat loss.',
-      instructions: [
-        'Start with warm-up walk',
-        'Maintain steady pace',
-        'Land on midfoot',
-        'Keep posture upright',
-        'Control breathing'
-      ]
-    },
-    {
-      id: 8,
-      name: 'Bicep Curls',
-      category: 'arms',
-      difficulty: 'Beginner',
-      muscleGroups: ['Biceps'],
-      equipment: ['Dumbbells'],
-      description: 'Isolation exercise for bicep development.',
-      instructions: [
-        'Stand with dumbbells at sides',
-        'Curl weights up',
-        'Keep elbows stationary',
-        'Squeeze at top',
-        'Lower with control'
-      ]
-    }
+  const categories: { value: string; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'strength', label: 'Strength' },
+    { value: 'cardio', label: 'Cardio' },
+    { value: 'flexibility', label: 'Flexibility' },
+    { value: 'core', label: 'Core' },
+    { value: 'hiit', label: 'HIIT' },
   ];
 
   const filteredExercises = exercises.filter(exercise => {
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exercise.muscleGroups.some(m => m.toLowerCase().includes(searchTerm.toLowerCase()));
+                         exercise.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         exercise.primaryMuscles.some(m => m.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = selectedCategory === 'all' || exercise.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'beginner':
+        return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'intermediate':
+        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      case 'advanced':
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
+      default:
+        return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="mb-2">Exercise Library</h1>
-        <p className="text-gray-600">
-          Browse our comprehensive database of exercises with detailed instructions
+        <h1 className="mb-2 text-foreground">Exercise Library</h1>
+        <p className="text-muted-foreground">
+          Browse {exercises.length}+ exercises with detailed instructions
         </p>
       </div>
 
-      <Card>
+      <Card className="bg-card border-border">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 type="text"
                 placeholder="Search exercises..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-input text-foreground"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto">
               {categories.map(category => (
                 <Button
-                  key={category}
-                  variant={selectedCategory === category ? 'default' : 'outline'}
-                  onClick={() => setSelectedCategory(category)}
+                  key={category.value}
+                  variant={selectedCategory === category.value ? 'default' : 'outline'}
+                  onClick={() => setSelectedCategory(category.value)}
                   className="capitalize whitespace-nowrap"
+                  size="sm"
                 >
-                  {category}
+                  {category.label}
                 </Button>
               ))}
             </div>
@@ -189,27 +83,29 @@ export function ExerciseLibrary() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredExercises.map(exercise => (
-          <Card key={exercise.id} className="hover:shadow-lg transition-shadow">
+          <Card key={exercise.id} className="hover:shadow-lg transition-shadow bg-card border-border">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="flex items-center gap-2">
-                    <Dumbbell className="w-5 h-5 text-blue-600" />
+                  <CardTitle className="flex items-center gap-2 text-foreground">
+                    <Dumbbell className="w-5 h-5 text-primary" />
                     {exercise.name}
                   </CardTitle>
-                  <CardDescription className="mt-2">
+                  <CardDescription className="mt-2 text-muted-foreground">
                     {exercise.category.charAt(0).toUpperCase() + exercise.category.slice(1)}
                   </CardDescription>
                 </div>
-                <Badge variant="secondary">{exercise.difficulty}</Badge>
+                <Badge className={getDifficultyColor(exercise.difficulty)}>
+                  {exercise.difficulty}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="text-sm mb-2">Target Muscles</h4>
+                <h4 className="text-sm mb-2 text-foreground">Target Muscles</h4>
                 <div className="flex flex-wrap gap-1">
-                  {exercise.muscleGroups.map(muscle => (
-                    <Badge key={muscle} variant="outline" className="text-xs">
+                  {exercise.primaryMuscles.map(muscle => (
+                    <Badge key={muscle} variant="outline" className="text-xs capitalize">
                       {muscle}
                     </Badge>
                   ))}
@@ -217,36 +113,53 @@ export function ExerciseLibrary() {
               </div>
 
               <div>
-                <h4 className="text-sm mb-2">Equipment</h4>
-                <p className="text-sm text-gray-600">
+                <h4 className="text-sm mb-2 text-foreground">Equipment</h4>
+                <p className="text-sm text-muted-foreground capitalize">
                   {exercise.equipment.join(', ') || 'None'}
                 </p>
               </div>
 
-              <p className="text-sm text-gray-600">{exercise.description}</p>
+              <p className="text-sm text-muted-foreground">{exercise.description}</p>
 
-              <div className="pt-2 border-t">
+              <div className="pt-2 border-t border-border">
                 <details className="group">
-                  <summary className="flex items-center gap-2 cursor-pointer text-sm text-blue-600 hover:text-blue-700">
+                  <summary className="flex items-center gap-2 cursor-pointer text-sm text-primary hover:text-primary/80">
                     <Info className="w-4 h-4" />
                     <span>View Instructions</span>
                   </summary>
-                  <ol className="mt-3 space-y-2 text-sm text-gray-600 list-decimal list-inside">
-                    {exercise.instructions.map((instruction, index) => (
-                      <li key={index}>{instruction}</li>
-                    ))}
-                  </ol>
-                </details>
-              </div>
+                  <div className="mt-3 space-y-4">
+                    <div>
+                      <h5 className="text-sm font-semibold mb-2 text-foreground">Instructions</h5>
+                      <ol className="space-y-1 text-sm text-muted-foreground list-decimal list-inside">
+                        {exercise.instructions.map((instruction, index) => (
+                          <li key={index}>{instruction}</li>
+                        ))}
+                      </ol>
+                    </div>
 
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" className="flex-1" size="sm">
-                  <Play className="w-4 h-4 mr-2" />
-                  Watch Video
-                </Button>
-                <Button className="flex-1" size="sm">
-                  Add to Workout
-                </Button>
+                    {exercise.formTips && exercise.formTips.length > 0 && (
+                      <div>
+                        <h5 className="text-sm font-semibold mb-2 text-foreground">Form Tips</h5>
+                        <ul className="space-y-1 text-sm text-muted-foreground list-disc list-inside">
+                          {exercise.formTips.map((tip, index) => (
+                            <li key={index}>{tip}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {exercise.commonMistakes && exercise.commonMistakes.length > 0 && (
+                      <div>
+                        <h5 className="text-sm font-semibold mb-2 text-foreground">Common Mistakes</h5>
+                        <ul className="space-y-1 text-sm text-muted-foreground list-disc list-inside">
+                          {exercise.commonMistakes.map((mistake, index) => (
+                            <li key={index}>{mistake}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </details>
               </div>
             </CardContent>
           </Card>
@@ -254,11 +167,11 @@ export function ExerciseLibrary() {
       </div>
 
       {filteredExercises.length === 0 && (
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-12 text-center">
-            <Dumbbell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="mb-2 text-gray-600">No exercises found</h3>
-            <p className="text-gray-500">Try adjusting your search or filter</p>
+            <Dumbbell className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
+            <h3 className="mb-2 text-foreground">No exercises found</h3>
+            <p className="text-muted-foreground">Try adjusting your search or filter</p>
           </CardContent>
         </Card>
       )}

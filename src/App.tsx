@@ -5,10 +5,12 @@ import { Dashboard } from './components/Dashboard';
 import { WorkoutGeneration } from './components/WorkoutGeneration';
 import { WorkoutHistory } from './components/WorkoutHistory';
 import { ActiveWorkout } from './components/ActiveWorkout';
-import { Home, LayoutDashboard, History, Play } from 'lucide-react';
+import { ExerciseLibrary } from './components/ExerciseLibrary';
+import { Settings } from './components/Settings';
+import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap } from 'lucide-react';
 import { Button } from './components/ui/button';
 
-type View = 'auth' | 'onboarding' | 'home' | 'dashboard' | 'workout' | 'history' | 'active-workout';
+type View = 'auth' | 'onboarding' | 'home' | 'dashboard' | 'workout' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<View>(() => {
@@ -35,8 +37,11 @@ export default function App() {
   const navigation = [
     { id: 'home' as View, label: 'Home', icon: Home },
     { id: 'active-workout' as View, label: 'Workout', icon: Play },
-    { id: 'dashboard' as View, label: 'Progress', icon: LayoutDashboard },
+    { id: 'generator' as View, label: 'Generate', icon: Zap },
+    { id: 'exercises' as View, label: 'Exercises', icon: Dumbbell },
     { id: 'history' as View, label: 'History', icon: History },
+    { id: 'dashboard' as View, label: 'Progress', icon: LayoutDashboard },
+    { id: 'settings' as View, label: 'Settings', icon: SettingsIcon },
   ];
 
   const handleCompleteAuth = () => {
@@ -185,9 +190,11 @@ export default function App() {
         )}
 
         {currentView === 'dashboard' && <Dashboard />}
-        {currentView === 'workout' && <WorkoutGeneration />}
+        {currentView === 'generator' && <WorkoutGeneration />}
         {currentView === 'history' && <WorkoutHistory />}
         {currentView === 'active-workout' && <ActiveWorkout />}
+        {currentView === 'exercises' && <ExerciseLibrary />}
+        {currentView === 'settings' && <Settings />}
       </main>
     </div>
   );
