@@ -16,7 +16,18 @@ import { userProfileStorage } from './utils/storage';
 type View = 'welcome' | 'onboarding' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator';
 
 export default function App() {
+  // Clear old auth/onboarding data on mount if no profile exists
+  const checkAndCleanOldData = () => {
+    const profile = userProfileStorage.get();
+    if (!profile && !isDemoMode()) {
+      // Clear old auth and onboarding data from previous version
+      localStorage.removeItem('userAuth');
+      localStorage.removeItem('userOnboarding');
+    }
+  };
+
   const [currentView, setCurrentView] = useState<View>(() => {
+    checkAndCleanOldData();
     // Check if in demo mode or has profile
     const profile = userProfileStorage.get();
     if (profile || isDemoMode()) return 'home';
