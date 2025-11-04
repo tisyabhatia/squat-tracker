@@ -1,28 +1,29 @@
 import { useState } from 'react';
-import { Auth } from './components/Auth';
-import { Onboarding } from './components/Onboarding';
+import { WelcomeScreen } from './components/WelcomeScreen';
+import { NewOnboarding } from './components/NewOnboarding';
 import { Dashboard } from './components/Dashboard';
 import { WorkoutGeneration } from './components/WorkoutGeneration';
 import { WorkoutHistory } from './components/WorkoutHistory';
 import { ActiveWorkout } from './components/ActiveWorkout';
 import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { Settings } from './components/Settings';
-import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap } from 'lucide-react';
+import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap, LogOut } from 'lucide-react';
 import { Button } from './components/ui/button';
+import { Badge } from './components/ui/badge';
+import { initializeDemoMode, isDemoMode, clearDemoMode } from './utils/demoData';
+import { userProfileStorage } from './utils/storage';
 
-type View = 'auth' | 'onboarding' | 'home' | 'dashboard' | 'workout' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator';
+type View = 'welcome' | 'onboarding' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<View>(() => {
-    // Check if user is authenticated
-    const authData = localStorage.getItem('userAuth');
-    if (!authData) return 'auth';
-
-    // Check if onboarding is completed
-    const onboardingData = localStorage.getItem('userOnboarding');
-    return onboardingData ? 'home' : 'onboarding';
+    // Check if in demo mode or has profile
+    const profile = userProfileStorage.get();
+    if (profile || isDemoMode()) return 'home';
+    return 'welcome';
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showDemoBanner, setShowDemoBanner] = useState(isDemoMode());
 
   // Safely get workout stats
   const getWorkoutStats = () => {
@@ -32,6 +33,10 @@ export default function App() {
     } catch {
       return { currentStreak: 0, workoutsThisWeek: 0, totalMinutes: 0 };
     }
+  };
+
+  const getUserProfile = () => {
+    return userProfileStorage.get();
   };
 
   const navigation = [
@@ -44,24 +49,93 @@ export default function App() {
     { id: 'settings' as View, label: 'Settings', icon: SettingsIcon },
   ];
 
-  const handleCompleteAuth = () => {
+  const handleStartFresh = () => {
+    clearDemoMode();
+    setShowDemoBanner(false);
     setCurrentView('onboarding');
   };
 
-  const handleCompleteOnboarding = () => {
+  const handleTryDemo = () => {
+    initializeDemoMode();
+    setShowDemoBanner(true);
+    setCurrentView('home');
+    window.location.reload(); // Reload to load demo data into context
+  };
+
+  const handleCompleteOnboarding = (data: any) => {
+    // Create user profile from onboarding data
+    const profile = {
+      id: `user-${Date.now()}`,
+      name: data.name,
+      fitnessLevel: data.fitnessLevel,
+      trainingSplit: data.trainingSplit,
+      weeklyFrequency: data.weeklyFrequency,
+      equipment: data.availableEquipment,
+      goals: data.goals,
+      preferences: {
+        defaultRestTime: 90,
+        unitSystem: 'imperial',
+        theme: 'system',
+        notifications: {
+          workoutReminders: true,
+          achievements: true,
+          streakReminders: true,
+        },
+      },
+      stats: {
+        totalWorkouts: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        workoutsThisWeek: 0,
+        totalVolume: 0,
+        averageDuration: 0,
+      },
+      isDemo: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    userProfileStorage.set(profile);
     setCurrentView('home');
   };
 
-  if (currentView === 'auth') {
-    return <Auth onComplete={handleCompleteAuth} />;
+  const handleExitDemo = () => {
+    if (confirm('Exit demo mode? All demo data will be cleared.')) {
+      handleStartFresh();
+    }
+  };
+
+  // Welcome screen
+  if (currentView === 'welcome') {
+    return <WelcomeScreen onStartFresh={handleStartFresh} onTryDemo={handleTryDemo} />;
   }
 
+  // Onboarding
   if (currentView === 'onboarding') {
-    return <Onboarding onComplete={handleCompleteOnboarding} />;
+    return <NewOnboarding onComplete={handleCompleteOnboarding} />;
   }
+
+  const profile = getUserProfile();
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Demo Banner */}
+      {showDemoBanner && (
+        <div className="bg-accent/20 border-b border-accent/30 px-4 py-2">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">Demo Mode</Badge>
+              <span className="text-sm text-foreground">
+                Exploring as {profile?.name || 'Demo User'}
+              </span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleExitDemo}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Exit Demo
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -100,7 +174,7 @@ export default function App() {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <nav className="md:hidden py-4 border-t">
+            <nav className="md:hidden py-4 border-t border-border">
               <div className="grid grid-cols-2 gap-2">
                 {navigation.map((item) => {
                   const Icon = item.icon;
@@ -130,7 +204,7 @@ export default function App() {
         {currentView === 'home' && (
           <div className="space-y-6">
             <div>
-              <h1 className="mb-2 text-foreground">Welcome back!</h1>
+              <h1 className="mb-2 text-foreground">Welcome back{profile?.name ? `, ${profile.name}` : ''}!</h1>
               <p className="text-muted-foreground">Ready to reach today's checkpoint?</p>
             </div>
 
@@ -139,7 +213,7 @@ export default function App() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm opacity-75 mb-1">Current Streak</p>
-                  <p className="text-4xl font-bold">{getWorkoutStats().currentStreak} days</p>
+                  <p className="text-4xl font-bold">{profile?.stats.currentStreak || getWorkoutStats().currentStreak} days</p>
                 </div>
                 <div className="text-6xl">🔥</div>
               </div>
@@ -170,22 +244,52 @@ export default function App() {
               </div>
             </div>
 
-            {/* Today's Workout Card */}
-            <div className="bg-card border-2 border-border rounded-lg p-6">
-              <h3 className="text-foreground mb-4">Today's Workout</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                  <span className="text-foreground">Full Body Strength</span>
-                  <Button
-                    size="sm"
-                    onClick={() => setCurrentView('active-workout')}
-                    className="bg-gradient-to-r from-[#F2C4DE] to-[#AED8F2] hover:opacity-90 text-[#2a2438]"
-                  >
-                    Start
-                  </Button>
+            {/* Goals Section */}
+            {profile?.goals && profile.goals.length > 0 && (
+              <div className="bg-card border-2 border-border rounded-lg p-6">
+                <h3 className="text-foreground mb-4">Your Goals</h3>
+                <div className="space-y-3">
+                  {profile.goals.slice(0, 3).map((goal: any) => (
+                    <div key={goal.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div className="flex-1">
+                        <p className="text-foreground font-medium">{goal.description}</p>
+                        <div className="w-full bg-muted rounded-full h-2 mt-2">
+                          <div
+                            className="bg-accent h-2 rounded-full transition-all"
+                            style={{ width: `${Math.min((goal.current / goal.target) * 100, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="ml-4">
+                        {Math.round((goal.current / goal.target) * 100)}%
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Quick Stats */}
+            {profile && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Total Workouts</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">{profile.stats.totalWorkouts}</p>
+                </div>
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">This Week</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">{profile.stats.workoutsThisWeek}</p>
+                </div>
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Total Volume</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">{(profile.stats.totalVolume / 1000).toFixed(0)}k</p>
+                </div>
+                <div className="bg-card border border-border rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Avg Duration</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">{profile.stats.averageDuration}min</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

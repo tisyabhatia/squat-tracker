@@ -1,14 +1,37 @@
 // ==================== User & Profile ====================
 
+export type TrainingSplit = 'fullbody' | 'upperlower' | 'ppl' | 'custom';
+
 export interface UserProfile {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   age?: number;
   fitnessLevel: 'beginner' | 'intermediate' | 'advanced';
-  goals: FitnessGoal[];
+  trainingSplit: TrainingSplit;
+  weeklyFrequency: number; // 1-7 days per week
+  equipment: Equipment[];
+  goals: Goal[];
   preferences: UserPreferences;
+  stats: UserStats;
+  isDemo: boolean;
   createdAt: string;
+  currentWeight?: number;
+  keyLifts?: {
+    bench?: number;
+    squat?: number;
+    deadlift?: number;
+  };
+}
+
+export interface UserStats {
+  totalWorkouts: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastWorkoutDate?: string;
+  workoutsThisWeek: number;
+  totalVolume: number;
+  averageDuration: number; // in minutes
 }
 
 export interface UserPreferences {
@@ -21,14 +44,6 @@ export interface UserPreferences {
     streakReminders: boolean;
   };
 }
-
-export type FitnessGoal =
-  | 'build-muscle'
-  | 'lose-weight'
-  | 'improve-endurance'
-  | 'increase-strength'
-  | 'stay-active'
-  | 'improve-flexibility';
 
 // ==================== Exercise Library ====================
 
@@ -177,9 +192,41 @@ export interface SetLog {
   reps?: number;
   duration?: number; // in seconds for timed exercises
   distance?: number; // for cardio
+  restTime?: number; // actual rest time taken in seconds
   completed: boolean;
   timestamp: string;
   rpe?: number; // Rate of Perceived Exertion (1-10)
+  isWarmup?: boolean;
+}
+
+// ==================== Active Workout State ====================
+
+export interface ActiveWorkoutState {
+  session: WorkoutSession | null;
+  currentExerciseIndex: number;
+  currentSetNumber: number;
+  isResting: boolean;
+  restTimeRemaining: number;
+  workoutStartTime: Date | null;
+  isPaused: boolean;
+}
+
+// ==================== Workout Summary ====================
+
+export interface WorkoutSummary {
+  session: WorkoutSession;
+  totalSets: number;
+  totalReps: number;
+  totalVolume: number;
+  averageRestTime: number;
+  estimatedCalories: number;
+  personalRecordsAchieved: PersonalRecord[];
+  volumeComparison?: number; // percentage vs last similar workout
+  goalProgress: {
+    goalId: string;
+    progressMade: number;
+    description: string;
+  }[];
 }
 
 // ==================== Progress & Analytics ====================
@@ -238,18 +285,26 @@ export interface WorkoutStats {
 
 // ==================== Goals & Achievements ====================
 
+export type GoalType =
+  | 'strength' // e.g., "Bench press 225 lbs"
+  | 'endurance' // e.g., "Run 5K under 25 minutes"
+  | 'consistency' // e.g., "Work out 4x/week for 12 weeks"
+  | 'body_composition' // e.g., "Lose 15 lbs in 3 months"
+  | 'volume' // e.g., "Complete 100,000 lbs total volume this month"
+  | 'duration'; // e.g., "Average 45-minute workouts for 8 weeks"
+
 export interface Goal {
   id: string;
-  title: string;
-  description: string;
-  type: 'workout-frequency' | 'streak' | 'weight-lifted' | 'distance' | 'custom';
-  target: number;
-  current: number;
-  unit: string;
-  deadline?: string;
+  type: GoalType;
+  description: string; // User-friendly description like "Bench press 225 lbs"
+  target: number; // Target value
+  current: number; // Current progress
+  unit: string; // 'lbs', 'kg', 'minutes', 'workouts', etc.
+  deadline: Date | string;
+  createdAt: Date | string;
   completed: boolean;
-  createdAt: string;
-  completedAt?: string;
+  completedAt?: Date | string;
+  exerciseId?: string; // For strength goals tied to specific exercises
 }
 
 export interface Achievement {
@@ -278,10 +333,16 @@ export interface WeeklyActivity {
 export interface OnboardingData {
   name: string;
   fitnessLevel: 'beginner' | 'intermediate' | 'advanced';
-  goals: FitnessGoal[];
+  weeklyFrequency: number; // 1-7 days per week
+  trainingSplit: TrainingSplit;
+  goals: Goal[];
   availableEquipment: Equipment[];
-  workoutFrequency: number; // days per week
-  preferredDuration: number; // minutes
+  currentWeight?: number;
+  keyLifts?: {
+    bench?: number;
+    squat?: number;
+    deadlift?: number;
+  };
 }
 
 // ==================== Settings ====================
