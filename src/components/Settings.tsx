@@ -5,9 +5,10 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Settings as SettingsIcon, User, Bell, Download, Upload, Trash2 } from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Download, Upload, Trash2, RotateCcw } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { dataManagement } from '../utils/storage';
+import { clearDemoMode } from '../utils/demoData';
 
 export function Settings() {
   const { settings, updateSettings } = useApp();
@@ -62,6 +63,14 @@ export function Settings() {
         alert('All data has been cleared. The page will now reload.');
         window.location.reload();
       }
+    }
+  };
+
+  const handleStartOver = () => {
+    if (confirm('Start over with a fresh profile? This will clear all your current data.')) {
+      clearDemoMode();
+      dataManagement.clearAll();
+      window.location.reload();
     }
   };
 
@@ -240,6 +249,20 @@ export function Settings() {
             </Button>
             <p className="text-sm text-muted-foreground mt-2">
               Restore data from a previous backup
+            </p>
+          </div>
+
+          <div>
+            <Button
+              onClick={handleStartOver}
+              variant="outline"
+              className="w-full justify-start"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Start Over
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Clear all data and return to welcome screen
             </p>
           </div>
 
