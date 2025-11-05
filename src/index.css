@@ -1,10 +1,14 @@
-@import "tailwindcss";
+/* stylelint-disable at-rule-no-unknown */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+/* stylelint-enable at-rule-no-unknown */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@custom-variant dark (&:is(.dark *));
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
 
 :root {
   --font-size: 16px;
@@ -76,7 +80,7 @@
   --chart-5: #ffb8ea;
 }
 
-@theme inline {
+:root {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -111,11 +115,16 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--color-border);
+    outline-color: var(--color-ring);
+    outline-width: 1px;
+    outline-style: solid;
+    outline-offset: 0.5px;
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
   }
 }
 
