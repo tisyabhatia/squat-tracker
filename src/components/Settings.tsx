@@ -5,14 +5,19 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Settings as SettingsIcon, User, Bell, Download, Upload, Trash2, RotateCcw } from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Download, Upload, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { dataManagement } from '../utils/storage';
 import { clearDemoMode } from '../utils/demoData';
+import { DangerConfirmModal } from './ui/modal';
+import { useToast } from '../contexts/ToastContext';
 
 export function Settings() {
   const { settings, updateSettings } = useApp();
+  const { toast } = useToast();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showClearDataModal, setShowClearDataModal] = useState(false);
+  const [showStartOverModal, setShowStartOverModal] = useState(false);
 
   const handleUpdateSettings = (updates: any) => {
     updateSettings(updates);
@@ -42,13 +47,13 @@ export function Settings() {
         try {
           const data = JSON.parse(event.target?.result as string);
           if (dataManagement.importAll(data)) {
-            alert('Data imported successfully! Please refresh the page.');
-            window.location.reload();
+            toast.success('Data imported successfully! Refreshing...');
+            setTimeout(() => window.location.reload(), 1500);
           } else {
-            alert('Error importing data. Please check the file format.');
+            toast.error('Error importing data. Please check the file format.');
           }
         } catch (error) {
-          alert('Error parsing file. Please ensure it\'s a valid JSON file.');
+          toast.error('Error parsing file. Please ensure it\'s a valid JSON file.');
         }
       };
       reader.readAsText(file);
@@ -57,21 +62,24 @@ export function Settings() {
   };
 
   const handleClearData = () => {
-    if (confirm('Are you sure you want to clear all data? This cannot be undone!')) {
-      if (confirm('This will delete ALL your workouts, exercises, and settings. Are you absolutely sure?')) {
-        dataManagement.clearAll();
-        alert('All data has been cleared. The page will now reload.');
-        window.location.reload();
-      }
-    }
+    setShowClearDataModal(true);
+  };
+
+  const confirmClearData = () => {
+    dataManagement.clearAll();
+    toast.success('All data has been cleared. Reloading...');
+    setTimeout(() => window.location.reload(), 1500);
   };
 
   const handleStartOver = () => {
-    if (confirm('Start over with a fresh profile? This will clear all your current data.')) {
-      clearDemoMode();
-      dataManagement.clearAll();
-      window.location.reload();
-    }
+    setShowStartOverModal(true);
+  };
+
+  const confirmStartOver = () => {
+    clearDemoMode();
+    dataManagement.clearAll();
+    toast.success('Starting fresh! Reloading...');
+    setTimeout(() => window.location.reload(), 1500);
   };
 
   return (
@@ -296,6 +304,32 @@ export function Settings() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Clear Data Modal */}
+      <DangerConfirmModal
+        isOpen={showClearDataModal}
+        onClose={() => setShowClearDataModal(false)}
+        onConfirm={confirmClearData}
+        title="Clear All Data?"
+        description="This will permanently delete ALL your workouts, exercises, body measurements, and settings. This action cannot be undone!"
+        confirmText="Clear All Data"
+        cancelText="Cancel"
+        requiredInput="DELETE"
+        icon={<AlertTriangle className="w-8 h-8 text-red-600" />}
+      />
+
+      {/* Start Over Modal */}
+      <DangerConfirmModal
+        isOpen={showStartOverModal}
+        onClose={() => setShowStartOverModal(false)}
+        onConfirm={confirmStartOver}
+        title="Start Over?"
+        description="This will clear all your current data and return you to the welcome screen. You'll start with a fresh profile. This action cannot be undone!"
+        confirmText="Start Over"
+        cancelText="Cancel"
+        requiredInput="RESET"
+        icon={<AlertTriangle className="w-8 h-8 text-red-600" />}
+      />
     </div>
   );
 }

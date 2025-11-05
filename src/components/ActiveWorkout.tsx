@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { Play, Pause, Check, Clock, Dumbbell, ChevronRight, TrendingUp, Award, History } from 'lucide-react';
+import { Play, Pause, Check, Clock, Dumbbell, ChevronRight, TrendingUp, Award, History, Trophy, AlertCircle } from 'lucide-react';
+import { Modal, ConfirmModal } from './ui/modal';
+import { useToast } from '../contexts/ToastContext';
 
 interface SetData {
   weight: number;
@@ -27,11 +29,14 @@ interface PreviousPerformance {
 }
 
 export function ActiveWorkout() {
+  const { toast } = useToast();
   const [isActive, setIsActive] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [previousPerformances, setPreviousPerformances] = useState<Map<string, PreviousPerformance>>(new Map());
   const [showHistory, setShowHistory] = useState<string | null>(null);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [workout, setWorkout] = useState<{ name: string; exercises: Exercise[] }>({
     name: 'Full Body Strength',
@@ -172,9 +177,11 @@ export function ActiveWorkout() {
     const reps = parseInt(currentReps) || 0;
 
     if (weight === 0 || reps === 0) {
-      alert('Please enter both weight and reps');
+      setError('Please enter both weight and reps');
       return;
     }
+
+    setError(null);
 
     // Check for progressive overload
     const exercise = workout.exercises[exerciseIndex];
@@ -192,8 +199,7 @@ export function ActiveWorkout() {
 
     // Show progressive overload achievement
     if (progressCheck) {
-      // Could show a toast or celebration animation here
-      console.log(`Progress: ${progressCheck.message}`);
+      toast.success(`New PR! ${progressCheck.message}`);
     }
 
     // Auto-advance to next exercise if all sets are complete
@@ -206,6 +212,10 @@ export function ActiveWorkout() {
 
   const handleFinishWorkout = () => {
     setIsActive(false);
+    setShowCompletionModal(true);
+  };
+
+  const confirmFinishWorkout = () => {
     // Save workout data to localStorage
     const workoutData = {
       name: workout.name,
@@ -226,7 +236,7 @@ export function ActiveWorkout() {
     stats.currentStreak += 1;
     localStorage.setItem('workoutStats', JSON.stringify(stats));
 
-    alert('Workout completed! Great job!');
+    toast.success('Workout completed! Great job!');
 
     // Reset workout
     setElapsedTime(0);
@@ -242,6 +252,26 @@ export function ActiveWorkout() {
       ]
     };
     setWorkout(resetWorkout);
+
+    // Reload previous performances for next workout
+    loadPreviousPerformances();
+  };
+
+  const calculateWorkoutStats = () => {
+    const totalVolume = workout.exercises.reduce((total, exercise) => {
+      return total + exercise.completedSets.reduce((sum, set) => sum + (set.weight * set.reps), 0);
+    }, 0);
+
+    const totalReps = workout.exercises.reduce((total, exercise) => {
+      return total + exercise.completedSets.reduce((sum, set) => sum + set.reps, 0);
+    }, 0);
+
+    const maxWeight = Math.max(
+      ...workout.exercises.flatMap(ex => ex.completedSets.map(s => s.weight)),
+      0
+    );
+
+    return { totalVolume, totalReps, maxWeight };
   };
 
   return (
@@ -252,6 +282,14 @@ export function ActiveWorkout() {
           Track your sets and reps in real-time
         </p>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -477,6 +515,75 @@ export function ActiveWorkout() {
           </Card>
         </div>
       </div>
+
+      {/* Workout Completion Modal */}
+      <Modal
+        isOpen={showCompletionModal}
+        onClose={() => {
+          setShowCompletionModal(false);
+          setIsActive(true); // Resume if they cancel
+        }}
+        title="Workout Complete!"
+        showCloseButton={false}
+        size="md"
+      >
+        {(() => {
+          const stats = calculateWorkoutStats();
+          return (
+            <div className="space-y-6">
+              <div className="flex justify-center">
+                <Trophy className="w-16 h-16 text-yellow-500" />
+              </div>
+
+              <div className="text-center">
+                <p className="text-lg text-gray-700">Great job! Here's your workout summary:</p>
+              </div>
+
+              <div className="space-y-3 bg-gray-50 rounded-lg p-4">
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600">Duration:</span>
+                  <span className="font-semibold text-gray-900">{formatTime(elapsedTime)}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600">Total Sets:</span>
+                  <span className="font-semibold text-gray-900">{completedSets}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600">Total Reps:</span>
+                  <span className="font-semibold text-gray-900">{stats.totalReps}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600">Total Volume:</span>
+                  <span className="font-semibold text-gray-900">{stats.totalVolume.toLocaleString()} lbs</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Max Weight:</span>
+                  <span className="font-semibold text-gray-900">{stats.maxWeight} lbs</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCompletionModal(false);
+                    setIsActive(true); // Resume workout
+                  }}
+                  className="flex-1"
+                >
+                  Keep Going
+                </Button>
+                <Button
+                  onClick={confirmFinishWorkout}
+                  className="flex-1"
+                >
+                  Save & Finish
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
     </div>
   );
 }
