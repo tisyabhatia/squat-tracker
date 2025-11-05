@@ -10,8 +10,7 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
-    "moduleDetectionresolve": "force",
-    "noEmit": true,
+    "moduleDetection": "auto",
     "jsx": "react-jsx",
 
     /* Linting */
