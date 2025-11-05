@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { WelcomeScreen } from './components/WelcomeScreen';
-import { NewOnboarding } from './components/NewOnboarding';
+import FirstTimeExperience from './components/FirstTimeExperience';
 import { Dashboard } from './components/Dashboard';
 import { WorkoutGeneration } from './components/WorkoutGeneration';
 import { WorkoutHistory } from './components/WorkoutHistory';
@@ -9,13 +9,15 @@ import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { Settings } from './components/Settings';
 import BodyMeasurements from './components/BodyMeasurements';
 import VolumeTracking from './components/VolumeTracking';
-import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap, LogOut, Ruler, Activity } from 'lucide-react';
+import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap, LogOut, Ruler, Activity, Trophy, TrendingUp } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Badge } from './components/ui/badge';
 import { initializeDemoMode, isDemoMode, clearDemoMode } from './utils/demoData';
-import { userProfileStorage } from './utils/storage';
+import { userProfileStorage, workoutSessionStorage } from './utils/storage';
+import { UserProfile, WorkoutSession } from './types';
+import { exerciseStorage } from './utils/storage';
 
-type View = 'welcome' | 'onboarding' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator' | 'body-measurements' | 'volume-tracking';
+type View = 'welcome' | 'first-time-experience' | 'day-1-celebration' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator' | 'body-measurements' | 'volume-tracking';
 
 export default function App() {
   // Clear old auth/onboarding data on mount if no profile exists
@@ -67,7 +69,7 @@ export default function App() {
   const handleStartFresh = () => {
     clearDemoMode();
     setShowDemoBanner(false);
-    setCurrentView('onboarding');
+    setCurrentView('first-time-experience');
   };
 
   const handleTryDemo = () => {
@@ -77,40 +79,19 @@ export default function App() {
     window.location.reload(); // Reload to load demo data into context
   };
 
-  const handleCompleteOnboarding = (data: any) => {
-    // Create user profile from onboarding data
-    const profile = {
-      id: `user-${Date.now()}`,
-      name: data.name,
-      fitnessLevel: data.fitnessLevel,
-      trainingSplit: data.trainingSplit,
-      weeklyFrequency: data.weeklyFrequency,
-      equipment: data.availableEquipment,
-      goals: data.goals,
-      preferences: {
-        defaultRestTime: 90,
-        unitSystem: 'imperial',
-        theme: 'system',
-        notifications: {
-          workoutReminders: true,
-          achievements: true,
-          streakReminders: true,
-        },
-      },
-      stats: {
-        totalWorkouts: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        workoutsThisWeek: 0,
-        totalVolume: 0,
-        averageDuration: 0,
-      },
-      isDemo: false,
-      createdAt: new Date().toISOString(),
-    };
-
+  const handleFirstTimeExperienceComplete = (profile: UserProfile, firstWorkout?: WorkoutSession) => {
+    // Save profile
     userProfileStorage.set(profile);
-    setCurrentView('home');
+
+    // Save first workout if provided
+    if (firstWorkout) {
+      workoutSessionStorage.add(firstWorkout);
+      // Show Day 1 celebration
+      setCurrentView('day-1-celebration');
+    } else {
+      // Go straight to home
+      setCurrentView('home');
+    }
   };
 
   const handleExitDemo = () => {
@@ -124,9 +105,73 @@ export default function App() {
     return <WelcomeScreen onStartFresh={handleStartFresh} onTryDemo={handleTryDemo} />;
   }
 
-  // Onboarding
-  if (currentView === 'onboarding') {
-    return <NewOnboarding onComplete={handleCompleteOnboarding} />;
+  // First Time Experience (Auth + Onboarding + First Action)
+  if (currentView === 'first-time-experience') {
+    const exercises = exerciseStorage.getAll();
+    return (
+      <FirstTimeExperience
+        exercises={exercises}
+        onComplete={handleFirstTimeExperienceComplete}
+      />
+    );
+  }
+
+  // Day 1 Celebration
+  if (currentView === 'day-1-celebration') {
+    const profile = getUserProfile();
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center px-4">
+        <div className="max-w-2xl w-full text-center">
+          <div className="bg-white rounded-2xl shadow-2xl p-12 space-y-6">
+            <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto animate-bounce">
+              <Trophy className="w-12 h-12 text-white" />
+            </div>
+
+            <h1 className="text-4xl font-bold text-gray-900">
+              🎉 Workout Saved!
+            </h1>
+
+            <p className="text-xl text-gray-700 leading-relaxed">
+              You've started your transformation.
+            </p>
+
+            <div className="bg-gray-50 rounded-lg p-6 my-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Day 1 Stats</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-3xl font-bold text-blue-600">{profile?.stats.totalWorkouts || 1}</p>
+                  <p className="text-sm text-gray-600">Workout</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-green-600">
+                    {((profile?.stats.totalVolume || 0) / 1000).toFixed(1)}k
+                  </p>
+                  <p className="text-sm text-gray-600">Volume (lbs)</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-purple-600">{profile?.stats.currentStreak || 1}</p>
+                  <p className="text-sm text-gray-600">Day Streak</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <p className="text-gray-800 italic">
+                "Consistency builds muscle. You've taken the first step."
+              </p>
+            </div>
+
+            <button
+              onClick={() => setCurrentView('home')}
+              className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-semibold text-lg shadow-lg flex items-center justify-center gap-2"
+            >
+              Continue to Dashboard
+              <TrendingUp className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const profile = getUserProfile();
