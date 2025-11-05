@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { Play, Pause, Check, Clock, Dumbbell, ChevronRight } from 'lucide-react';
+import { Play, Pause, Check, Clock, Dumbbell, ChevronRight, TrendingUp, Award, History } from 'lucide-react';
 
 interface SetData {
   weight: number;
@@ -18,10 +18,20 @@ interface Exercise {
   completedSets: SetData[];
 }
 
+interface PreviousPerformance {
+  exerciseName: string;
+  sets: SetData[];
+  date: string;
+  totalVolume: number;
+  maxWeight: number;
+}
+
 export function ActiveWorkout() {
   const [isActive, setIsActive] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [previousPerformances, setPreviousPerformances] = useState<Map<string, PreviousPerformance>>(new Map());
+  const [showHistory, setShowHistory] = useState<string | null>(null);
 
   const [workout, setWorkout] = useState<{ name: string; exercises: Exercise[] }>({
     name: 'Full Body Strength',
@@ -36,6 +46,102 @@ export function ActiveWorkout() {
 
   const [currentWeight, setCurrentWeight] = useState('');
   const [currentReps, setCurrentReps] = useState('');
+
+  // Load previous performances on mount
+  useEffect(() => {
+    loadPreviousPerformances();
+  }, []);
+
+  const loadPreviousPerformances = () => {
+    try {
+      const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+      const performanceMap = new Map<string, PreviousPerformance>();
+
+      // Find the most recent performance for each exercise
+      for (let i = history.length - 1; i >= 0; i--) {
+        const workout = history[i];
+        if (!workout.exercises) continue;
+
+        workout.exercises.forEach((exercise: Exercise) => {
+          if (!performanceMap.has(exercise.name) && exercise.completedSets.length > 0) {
+            const totalVolume = exercise.completedSets.reduce(
+              (sum: number, set: SetData) => sum + (set.weight * set.reps),
+              0
+            );
+            const maxWeight = Math.max(...exercise.completedSets.map((set: SetData) => set.weight));
+
+            performanceMap.set(exercise.name, {
+              exerciseName: exercise.name,
+              sets: exercise.completedSets,
+              date: workout.completedAt,
+              totalVolume,
+              maxWeight,
+            });
+          }
+        });
+      }
+
+      setPreviousPerformances(performanceMap);
+    } catch (error) {
+      console.error('Error loading previous performances:', error);
+    }
+  };
+
+  const getProgressiveSuggestion = (exerciseName: string, setNumber: number) => {
+    const previous = previousPerformances.get(exerciseName);
+    if (!previous || !previous.sets[setNumber - 1]) {
+      return null;
+    }
+
+    const lastSet = previous.sets[setNumber - 1];
+    const suggestions = [];
+
+    // Suggest weight increase (2.5-5 lbs for upper body, 5-10 lbs for lower body)
+    const isLowerBody = exerciseName.toLowerCase().includes('squat') ||
+                        exerciseName.toLowerCase().includes('deadlift') ||
+                        exerciseName.toLowerCase().includes('leg');
+    const weightIncrement = isLowerBody ? 5 : 2.5;
+
+    suggestions.push({
+      type: 'weight',
+      text: `Last: ${lastSet.weight} lbs × ${lastSet.reps} reps`,
+      suggestion: `Try: ${lastSet.weight + weightIncrement} lbs × ${lastSet.reps} reps`,
+    });
+
+    // Suggest rep increase if reps were high
+    if (lastSet.reps >= 10) {
+      suggestions.push({
+        type: 'reps',
+        text: `Or add reps: ${lastSet.weight} lbs × ${lastSet.reps + 1} reps`,
+      });
+    }
+
+    return suggestions[0];
+  };
+
+  const checkProgressiveOverload = (exerciseName: string, weight: number, reps: number) => {
+    const previous = previousPerformances.get(exerciseName);
+    if (!previous) return null;
+
+    const currentSetIndex = workout.exercises
+      .find(e => e.name === exerciseName)?.completedSets.length || 0;
+
+    const lastSet = previous.sets[currentSetIndex];
+    if (!lastSet) return null;
+
+    const currentVolume = weight * reps;
+    const lastVolume = lastSet.weight * lastSet.reps;
+
+    if (weight > lastSet.weight) {
+      return { type: 'weight', message: `+${(weight - lastSet.weight).toFixed(1)} lbs heavier!` };
+    } else if (reps > lastSet.reps && weight >= lastSet.weight) {
+      return { type: 'reps', message: `+${reps - lastSet.reps} more reps!` };
+    } else if (currentVolume > lastVolume) {
+      return { type: 'volume', message: `+${((currentVolume - lastVolume) / lastVolume * 100).toFixed(0)}% volume!` };
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -70,6 +176,10 @@ export function ActiveWorkout() {
       return;
     }
 
+    // Check for progressive overload
+    const exercise = workout.exercises[exerciseIndex];
+    const progressCheck = checkProgressiveOverload(exercise.name, weight, reps);
+
     const newWorkout = { ...workout };
     newWorkout.exercises[exerciseIndex].completedSets.push({
       weight,
@@ -79,6 +189,12 @@ export function ActiveWorkout() {
     setWorkout(newWorkout);
     setCurrentWeight('');
     setCurrentReps('');
+
+    // Show progressive overload achievement
+    if (progressCheck) {
+      // Could show a toast or celebration animation here
+      console.log(`Progress: ${progressCheck.message}`);
+    }
 
     // Auto-advance to next exercise if all sets are complete
     if (newWorkout.exercises[exerciseIndex].completedSets.length === newWorkout.exercises[exerciseIndex].sets) {
@@ -206,8 +322,22 @@ export function ActiveWorkout() {
                     </div>
 
                     {exercise.completedSets.length < exercise.sets && currentExerciseIndex === exerciseIndex && (
-                      <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border">
-                        <p className="text-sm mb-2 text-foreground">Log Set {exercise.completedSets.length + 1}</p>
+                      <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border space-y-2">
+                        {/* Progressive Overload Suggestion */}
+                        {(() => {
+                          const suggestion = getProgressiveSuggestion(exercise.name, exercise.completedSets.length + 1);
+                          return suggestion ? (
+                            <div className="flex items-start gap-2 p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <TrendingUp className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                              <div className="text-xs space-y-1">
+                                <div className="text-gray-700 dark:text-gray-300">{suggestion.text}</div>
+                                <div className="font-semibold text-blue-600 dark:text-blue-400">{suggestion.suggestion}</div>
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
+
+                        <p className="text-sm mb-2 text-foreground font-medium">Log Set {exercise.completedSets.length + 1}</p>
                         <div className="flex gap-2">
                           <div className="flex items-center gap-1 flex-1">
                             <Input
@@ -242,18 +372,41 @@ export function ActiveWorkout() {
 
                     {exercise.completedSets.length > 0 && (
                       <div className="mt-3 space-y-1">
-                        {exercise.completedSets.map((set, setIndex) => (
-                          <div
-                            key={setIndex}
-                            className="flex items-center justify-between text-sm p-2 bg-accent/20 rounded"
-                          >
-                            <span className="text-muted-foreground">Set {setIndex + 1}</span>
-                            <span className="text-foreground">
-                              {set.weight} lbs × {set.reps} reps
-                            </span>
-                            <Check className="w-4 h-4 text-accent" />
-                          </div>
-                        ))}
+                        {exercise.completedSets.map((set, setIndex) => {
+                          const previous = previousPerformances.get(exercise.name);
+                          const previousSet = previous?.sets[setIndex];
+                          const isImprovement = previousSet && (
+                            set.weight > previousSet.weight ||
+                            (set.weight === previousSet.weight && set.reps > previousSet.reps) ||
+                            (set.weight * set.reps > previousSet.weight * previousSet.reps)
+                          );
+
+                          return (
+                            <div
+                              key={setIndex}
+                              className={`flex items-center justify-between text-sm p-2 rounded ${
+                                isImprovement
+                                  ? 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'
+                                  : 'bg-accent/20'
+                              }`}
+                            >
+                              <span className="text-muted-foreground">Set {setIndex + 1}</span>
+                              <span className="text-foreground flex items-center gap-2">
+                                {set.weight} lbs × {set.reps} reps
+                                {previousSet && (
+                                  <span className="text-xs text-gray-500">
+                                    (was: {previousSet.weight} × {previousSet.reps})
+                                  </span>
+                                )}
+                              </span>
+                              {isImprovement ? (
+                                <Award className="w-4 h-4 text-green-600" />
+                              ) : (
+                                <Check className="w-4 h-4 text-accent" />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
 

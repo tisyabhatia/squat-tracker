@@ -7,13 +7,15 @@ import { WorkoutHistory } from './components/WorkoutHistory';
 import { ActiveWorkout } from './components/ActiveWorkout';
 import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { Settings } from './components/Settings';
-import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap, LogOut } from 'lucide-react';
+import BodyMeasurements from './components/BodyMeasurements';
+import VolumeTracking from './components/VolumeTracking';
+import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap, LogOut, Ruler, Activity } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Badge } from './components/ui/badge';
 import { initializeDemoMode, isDemoMode, clearDemoMode } from './utils/demoData';
 import { userProfileStorage } from './utils/storage';
 
-type View = 'welcome' | 'onboarding' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator';
+type View = 'welcome' | 'onboarding' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator' | 'body-measurements' | 'volume-tracking';
 
 export default function App() {
   // Clear old auth/onboarding data on mount if no profile exists
@@ -55,6 +57,8 @@ export default function App() {
     { id: 'active-workout' as View, label: 'Workout', icon: Play },
     { id: 'generator' as View, label: 'Generate', icon: Zap },
     { id: 'exercises' as View, label: 'Exercises', icon: Dumbbell },
+    { id: 'volume-tracking' as View, label: 'Volume', icon: Activity },
+    { id: 'body-measurements' as View, label: 'Body', icon: Ruler },
     { id: 'history' as View, label: 'History', icon: History },
     { id: 'dashboard' as View, label: 'Progress', icon: LayoutDashboard },
     { id: 'settings' as View, label: 'Settings', icon: SettingsIcon },
@@ -255,6 +259,34 @@ export default function App() {
               </div>
             </div>
 
+            {/* Bodybuilding Features */}
+            <div className="bg-card border-2 border-border rounded-lg p-6">
+              <h3 className="text-foreground mb-4 font-semibold">Bodybuilding Tools</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  onClick={() => setCurrentView('volume-tracking')}
+                  className="p-4 bg-muted/30 rounded-lg border border-border hover:border-primary hover:bg-muted/50 cursor-pointer transition-all"
+                >
+                  <Activity className="w-8 h-8 text-blue-600 mb-2" />
+                  <h4 className="text-foreground font-medium mb-1">Volume Tracking</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Monitor weekly volume per muscle group
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => setCurrentView('body-measurements')}
+                  className="p-4 bg-muted/30 rounded-lg border border-border hover:border-primary hover:bg-muted/50 cursor-pointer transition-all"
+                >
+                  <Ruler className="w-8 h-8 text-green-600 mb-2" />
+                  <h4 className="text-foreground font-medium mb-1">Body Measurements</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Track your body composition and measurements
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Goals Section */}
             {profile?.goals && profile.goals.length > 0 && (
               <div className="bg-card border-2 border-border rounded-lg p-6">
@@ -309,6 +341,8 @@ export default function App() {
         {currentView === 'history' && <WorkoutHistory />}
         {currentView === 'active-workout' && <ActiveWorkout />}
         {currentView === 'exercises' && <ExerciseLibrary />}
+        {currentView === 'volume-tracking' && <VolumeTracking onBack={() => setCurrentView('home')} />}
+        {currentView === 'body-measurements' && <BodyMeasurements onBack={() => setCurrentView('home')} />}
         {currentView === 'settings' && <Settings />}
       </main>
     </div>
