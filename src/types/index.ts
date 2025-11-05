@@ -1,22 +1,31 @@
 // ==================== User & Profile ====================
 
 export type TrainingSplit = 'fullbody' | 'upperlower' | 'ppl' | 'custom';
+export type Gender = 'male' | 'female' | 'other' | 'prefer-not-to-say';
+export type BodybuildingGoal = 'recomp' | 'lean-bulk' | 'cut' | 'strength-focus';
 
 export interface UserProfile {
   id: string;
   name: string;
-  email?: string;
-  age?: number;
+  email: string;
+  age: number;
+  height: number; // in inches or cm depending on unit system
+  weight: number; // in lbs or kg depending on unit system
+  gender: Gender;
   fitnessLevel: 'beginner' | 'intermediate' | 'advanced';
   trainingSplit: TrainingSplit;
   weeklyFrequency: number; // 1-7 days per week
   equipment: Equipment[];
+  primaryGoal: BodybuildingGoal;
+  targetWeight?: number;
+  targetBodyFat?: number;
   goals: Goal[];
   preferences: UserPreferences;
   stats: UserStats;
   isDemo: boolean;
   createdAt: string;
-  currentWeight?: number;
+  firstWorkoutCompleted: boolean;
+  firstBodyMetricsLogged: boolean;
   keyLifts?: {
     bench?: number;
     squat?: number;
@@ -387,18 +396,26 @@ export interface WeeklyActivity {
 // ==================== Onboarding ====================
 
 export interface OnboardingData {
+  // Step 1: Authentication (handled separately)
+  email: string;
+
+  // Step 2: Personal Stats
   name: string;
+  age: number;
+  height: number;
+  weight: number;
+  gender: Gender;
   fitnessLevel: 'beginner' | 'intermediate' | 'advanced';
-  weeklyFrequency: number; // 1-7 days per week
-  trainingSplit: TrainingSplit;
-  goals: Goal[];
-  availableEquipment: Equipment[];
-  currentWeight?: number;
-  keyLifts?: {
-    bench?: number;
-    squat?: number;
-    deadlift?: number;
-  };
+
+  // Step 3: Goal Selection
+  primaryGoal: BodybuildingGoal;
+  targetWeight?: number;
+  targetBodyFat?: number;
+
+  // Step 4: Training Preferences (optional, can be set later)
+  weeklyFrequency?: number;
+  trainingSplit?: TrainingSplit;
+  availableEquipment?: Equipment[];
 }
 
 // ==================== Settings ====================
