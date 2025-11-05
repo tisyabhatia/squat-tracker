@@ -6,9 +6,11 @@ import { Clock, Target, Zap, ChevronRight, Play, Dumbbell } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 import { useApp } from '../contexts/AppContext';
 import { WorkoutTemplate } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 export function WorkoutGeneration() {
   const { workoutTemplates, getExerciseById, setActiveWorkout } = useApp();
+  const { toast } = useToast();
   const [selectedTemplate, setSelectedTemplate] = useState<WorkoutTemplate | null>(null);
 
   const handleStartWorkout = (template: WorkoutTemplate) => {
@@ -33,7 +35,7 @@ export function WorkoutGeneration() {
     };
 
     setActiveWorkout(workoutSession);
-    alert('Workout started! Navigate to the Workout tab to begin.');
+    toast.success('Workout started! Navigate to the Workout tab to begin.');
   };
 
   const getDifficultyColor = (difficulty: string) => {
