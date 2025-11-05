@@ -22,6 +22,7 @@ export interface UserProfile {
     squat?: number;
     deadlift?: number;
   };
+  bodyMetrics?: BodyMetrics[];
 }
 
 export interface UserStats {
@@ -265,11 +266,66 @@ export interface BodyMetrics {
     chest?: number;
     waist?: number;
     hips?: number;
-    biceps?: number;
-    thighs?: number;
+    leftBicep?: number;
+    rightBicep?: number;
+    leftThigh?: number;
+    rightThigh?: number;
+    leftCalf?: number;
+    rightCalf?: number;
+    shoulders?: number;
+    neck?: number;
   };
   photos?: string[];
   notes?: string;
+}
+
+// ==================== Volume Tracking ====================
+
+export interface MuscleGroupVolume {
+  muscleGroup: MuscleGroup;
+  totalSets: number;
+  totalReps: number;
+  totalVolume: number; // weight × reps × sets
+  workoutCount: number;
+  lastWorkoutDate?: string;
+}
+
+export interface WeeklyVolumeData {
+  weekStart: string;
+  weekEnd: string;
+  muscleGroups: MuscleGroupVolume[];
+  totalVolume: number;
+  totalSets: number;
+}
+
+// ==================== Progressive Overload ====================
+
+export interface ExerciseHistory {
+  exerciseId: string;
+  exerciseName: string;
+  sessions: {
+    date: string;
+    sessionId: string;
+    sets: SetLog[];
+    totalVolume: number;
+    maxWeight: number;
+    avgRpe?: number;
+  }[];
+}
+
+export interface ProgressiveSuggestion {
+  type: 'increase-weight' | 'increase-reps' | 'increase-sets' | 'maintain';
+  suggestion: string;
+  lastPerformance: {
+    weight?: number;
+    reps?: number;
+    sets: number;
+    date: string;
+  };
+  recommendedChange?: {
+    weight?: number;
+    reps?: number;
+  };
 }
 
 export interface WorkoutStats {
