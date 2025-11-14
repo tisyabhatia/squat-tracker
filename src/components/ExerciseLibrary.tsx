@@ -3,22 +3,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Search, Dumbbell, Info, Star } from 'lucide-react';
+import { Search, Dumbbell, Info, Star, Zap } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { ExerciseCategory } from '../types';
+import { WorkoutGeneration } from './WorkoutGeneration';
 
 export function ExerciseLibrary() {
   const { exercises } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [showGenerate, setShowGenerate] = useState(false);
+
+  if (showGenerate) {
+    return (
+      <div className="space-y-6">
+        <Button
+          variant="ghost"
+          onClick={() => setShowGenerate(false)}
+          className="text-foreground"
+        >
+          ← Back to Exercises
+        </Button>
+        <WorkoutGeneration />
+      </div>
+    );
+  }
 
   const categories: { value: string; label: string }[] = [
     { value: 'all', label: 'All' },
     { value: 'strength', label: 'Strength' },
     { value: 'cardio', label: 'Cardio' },
-    { value: 'flexibility', label: 'Flexibility' },
     { value: 'core', label: 'Core' },
-    { value: 'hiit', label: 'HIIT' },
   ];
 
   const filteredExercises = exercises.filter(exercise => {
@@ -44,11 +59,20 @@ export function ExerciseLibrary() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="mb-2 text-foreground">Exercise Library</h1>
-        <p className="text-muted-foreground">
-          Browse {exercises.length}+ exercises with detailed instructions
-        </p>
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="mb-2 text-foreground">Exercise Library</h1>
+          <p className="text-muted-foreground">
+            Browse {exercises.length}+ exercises with detailed instructions
+          </p>
+        </div>
+        <Button
+          onClick={() => setShowGenerate(true)}
+          className="flex items-center gap-2"
+        >
+          <Zap className="w-4 h-4" />
+          Generate Workout
+        </Button>
       </div>
 
       <Card className="bg-card border-border">
@@ -140,7 +164,7 @@ export function ExerciseLibrary() {
                     {exercise.formTips && exercise.formTips.length > 0 && (
                       <div>
                         <h5 className="text-sm font-semibold mb-2 text-foreground">Form Tips</h5>
-                        <ul className="space-y-1 text-sm text-muted-foreground list-disc list-inside">
+                        <ul className="space-y-1 text-muted-foreground list-disc list-inside">
                           {exercise.formTips.map((tip, index) => (
                             <li key={index}>{tip}</li>
                           ))}
