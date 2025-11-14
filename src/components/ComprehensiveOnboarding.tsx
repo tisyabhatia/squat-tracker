@@ -159,7 +159,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="John Doe"
@@ -182,7 +182,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                   type="number"
                   value={formData.age || ''}
                   onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || undefined })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
                     errors.age ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="25"
@@ -201,7 +201,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                   step="0.1"
                   value={formData.height || ''}
                   onChange={(e) => setFormData({ ...formData, height: parseFloat(e.target.value) || undefined })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
                     errors.height ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="70"
@@ -220,7 +220,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                   step="0.1"
                   value={formData.weight || ''}
                   onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) || undefined })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
                     errors.weight ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="180"
@@ -376,7 +376,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                     step="0.1"
                     value={formData.targetWeight || ''}
                     onChange={(e) => setFormData({ ...formData, targetWeight: parseFloat(e.target.value) || undefined })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
                       errors.targetWeight ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Optional"
@@ -395,7 +395,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                     step="0.1"
                     value={formData.targetBodyFat || ''}
                     onChange={(e) => setFormData({ ...formData, targetBodyFat: parseFloat(e.target.value) || undefined })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
                       errors.targetBodyFat ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Optional"
