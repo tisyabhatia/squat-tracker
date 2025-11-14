@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { Play, Pause, Check, Clock, Dumbbell, ChevronRight, TrendingUp, Award, History, Trophy, AlertCircle } from 'lucide-react';
+import { Play, Pause, Check, Clock, Dumbbell, ChevronRight, TrendingUp, Award, History, Trophy, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Modal, ConfirmModal } from './ui/modal';
 import { useToast } from '../contexts/ToastContext';
 
@@ -37,6 +37,8 @@ export function ActiveWorkout() {
   const [showHistory, setShowHistory] = useState<string | null>(null);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showUpcoming, setShowUpcoming] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(true);
 
   const [workout, setWorkout] = useState<{ name: string; exercises: Exercise[] }>({
     name: 'Full Body Strength',
@@ -513,6 +515,86 @@ export function ActiveWorkout() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Upcoming Exercises */}
+          {workout.exercises.slice(currentExerciseIndex + 1).length > 0 && (
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <button
+                  onClick={() => setShowUpcoming(!showUpcoming)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <CardTitle className="flex items-center gap-2 text-foreground text-base">
+                    <ChevronRight className="w-5 h-5 text-primary" />
+                    Upcoming Exercises
+                  </CardTitle>
+                  {showUpcoming ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+              </CardHeader>
+              {showUpcoming && (
+                <CardContent className="space-y-2 pt-0">
+                  {workout.exercises.slice(currentExerciseIndex + 1).map((exercise, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg border border-border">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{exercise.name}</p>
+                        <p className="text-xs text-muted-foreground">{exercise.sets} sets × {exercise.targetReps} reps</p>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {exercise.sets} sets
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              )}
+            </Card>
+          )}
+
+          {/* Completed Exercises */}
+          {workout.exercises.filter(ex => ex.completedSets.length === ex.sets).length > 0 && (
+            <Card className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <button
+                  onClick={() => setShowCompleted(!showCompleted)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <CardTitle className="flex items-center gap-2 text-foreground text-base">
+                    <Check className="w-5 h-5 text-primary" />
+                    Completed Exercises
+                  </CardTitle>
+                  {showCompleted ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+              </CardHeader>
+              {showCompleted && (
+                <CardContent className="space-y-2 pt-0">
+                  {workout.exercises
+                    .filter(ex => ex.completedSets.length === ex.sets)
+                    .map((exercise, idx) => {
+                      const totalVolume = exercise.completedSets.reduce((sum, set) => sum + (set.weight * set.reps), 0);
+                      return (
+                        <div key={idx} className="p-2 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-sm font-medium text-foreground">{exercise.name}</p>
+                            <Check className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground">{exercise.completedSets.length} sets completed</p>
+                            <p className="text-xs text-muted-foreground">{totalVolume.toLocaleString()} lbs</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </CardContent>
+              )}
+            </Card>
+          )}
         </div>
       </div>
 

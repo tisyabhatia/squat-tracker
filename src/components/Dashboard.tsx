@@ -11,6 +11,21 @@ export function Dashboard() {
     totalMinutes: 0,
     currentStreak: 0,
   });
+  const [weeklyData, setWeeklyData] = useState([
+    { day: 'Mon', workouts: 0, duration: 0 },
+    { day: 'Tue', workouts: 0, duration: 0 },
+    { day: 'Wed', workouts: 0, duration: 0 },
+    { day: 'Thu', workouts: 0, duration: 0 },
+    { day: 'Fri', workouts: 0, duration: 0 },
+    { day: 'Sat', workouts: 0, duration: 0 },
+    { day: 'Sun', workouts: 0, duration: 0 },
+  ]);
+  const [progressData, setProgressData] = useState([
+    { week: 'Week 1', volume: 0, strength: 0 },
+    { week: 'Week 2', volume: 0, strength: 0 },
+    { week: 'Week 3', volume: 0, strength: 0 },
+    { week: 'Week 4', volume: 0, strength: 0 },
+  ]);
 
   useEffect(() => {
     // Load onboarding data
@@ -24,25 +39,86 @@ export function Dashboard() {
     if (stats) {
       setWorkoutStats(JSON.parse(stats));
     }
+
+    // Load and process workout history
+    const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+
+    // Calculate weekly data
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weeklyWorkouts = [
+      { day: 'Sun', workouts: 0, duration: 0 },
+      { day: 'Mon', workouts: 0, duration: 0 },
+      { day: 'Tue', workouts: 0, duration: 0 },
+      { day: 'Wed', workouts: 0, duration: 0 },
+      { day: 'Thu', workouts: 0, duration: 0 },
+      { day: 'Fri', workouts: 0, duration: 0 },
+      { day: 'Sat', workouts: 0, duration: 0 },
+    ];
+
+    history.forEach((workout: any) => {
+      const workoutDate = new Date(workout.completedAt);
+      const daysSinceWeekStart = Math.floor((workoutDate.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysSinceWeekStart >= 0 && daysSinceWeekStart < 7) {
+        weeklyWorkouts[daysSinceWeekStart].workouts += 1;
+        weeklyWorkouts[daysSinceWeekStart].duration += Math.floor((workout.duration || 0) / 60);
+      }
+    });
+
+    setWeeklyData(weeklyWorkouts);
+
+    // Calculate monthly progress (last 4 weeks)
+    const fourWeeksAgo = new Date(now);
+    fourWeeksAgo.setDate(now.getDate() - 28);
+
+    const weeklyProgress = [
+      { week: 'Week 1', volume: 0, strength: 0, count: 0 },
+      { week: 'Week 2', volume: 0, strength: 0, count: 0 },
+      { week: 'Week 3', volume: 0, strength: 0, count: 0 },
+      { week: 'Week 4', volume: 0, strength: 0, count: 0 },
+    ];
+
+    history.forEach((workout: any) => {
+      const workoutDate = new Date(workout.completedAt);
+      const daysSinceStart = Math.floor((workoutDate.getTime() - fourWeeksAgo.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysSinceStart >= 0 && daysSinceStart < 28) {
+        const weekIndex = Math.floor(daysSinceStart / 7);
+
+        // Calculate total volume and max weight for this workout
+        let workoutVolume = 0;
+        let maxWeight = 0;
+
+        if (workout.exercises) {
+          workout.exercises.forEach((exercise: any) => {
+            if (exercise.completedSets) {
+              exercise.completedSets.forEach((set: any) => {
+                workoutVolume += (set.weight || 0) * (set.reps || 0);
+                maxWeight = Math.max(maxWeight, set.weight || 0);
+              });
+            }
+          });
+        }
+
+        weeklyProgress[weekIndex].volume += workoutVolume;
+        weeklyProgress[weekIndex].strength = Math.max(weeklyProgress[weekIndex].strength, maxWeight);
+        weeklyProgress[weekIndex].count += 1;
+      }
+    });
+
+    // Average the volume for each week
+    const finalProgress = weeklyProgress.map(week => ({
+      week: week.week,
+      volume: week.count > 0 ? Math.round(week.volume / week.count) : 0,
+      strength: week.strength,
+    }));
+
+    setProgressData(finalProgress);
   }, []);
-
-  // Empty data for charts (will be populated as user logs workouts)
-  const weeklyData = [
-    { day: 'Mon', workouts: 0, duration: 0 },
-    { day: 'Tue', workouts: 0, duration: 0 },
-    { day: 'Wed', workouts: 0, duration: 0 },
-    { day: 'Thu', workouts: 0, duration: 0 },
-    { day: 'Fri', workouts: 0, duration: 0 },
-    { day: 'Sat', workouts: 0, duration: 0 },
-    { day: 'Sun', workouts: 0, duration: 0 },
-  ];
-
-  const progressData = [
-    { week: 'Week 1', volume: 0, strength: 0 },
-    { week: 'Week 2', volume: 0, strength: 0 },
-    { week: 'Week 3', volume: 0, strength: 0 },
-    { week: 'Week 4', volume: 0, strength: 0 },
-  ];
 
   const stats = [
     { label: 'Workouts This Week', value: workoutStats.workoutsThisWeek.toString(), icon: Dumbbell, color: 'text-primary' },

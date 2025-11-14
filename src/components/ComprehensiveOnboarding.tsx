@@ -46,17 +46,13 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
     if (!formData.height) {
       newErrors.height = 'Height is required';
     } else if (formData.height < 36 || formData.height > 96) {
-      newErrors.height = 'Height must be between 36 and 96 inches';
+      newErrors.height = 'Height must be between 3ft and 8ft';
     }
 
     if (!formData.weight) {
       newErrors.weight = 'Weight is required';
     } else if (formData.weight < 50 || formData.weight > 400) {
       newErrors.weight = 'Weight must be between 50 and 400 lbs';
-    }
-
-    if (!formData.gender) {
-      newErrors.gender = 'Gender is required';
     }
 
     if (!formData.fitnessLevel) {
@@ -121,17 +117,17 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600">Step {step} of 3</span>
-            <span className="text-sm text-gray-500">{Math.round((step / 3) * 100)}% Complete</span>
+            <span className="text-sm font-medium text-muted-foreground">Step {step} of 3</span>
+            <span className="text-sm text-muted-foreground">{Math.round((step / 3) * 100)}% Complete</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-muted rounded-full h-2">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2 rounded-full transition-all duration-300"
               style={{ width: `${(step / 3) * 100}%` }}
             />
           </div>
@@ -139,33 +135,33 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
 
         {/* Step 1: Personal Stats */}
         {step === 1 && (
-          <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-right duration-300">
+          <div className="bg-card rounded-xl shadow-sm p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-right duration-300">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                <User className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Personal Information</h2>
-                <p className="text-gray-600">Tell us about yourself</p>
+                <h2 className="text-2xl font-bold text-foreground">Personal Information</h2>
+                <p className="text-muted-foreground">Tell us about yourself</p>
               </div>
             </div>
 
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Full Name <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  errors.name ? 'border-destructive' : 'border-input'
                 }`}
                 placeholder="John Doe"
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                <p className="mt-1 text-sm text-destructive flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   {errors.name}
                 </p>
@@ -175,99 +171,86 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
             {/* Age, Height, Weight Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Age <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Age <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="number"
                   value={formData.age || ''}
                   onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || undefined })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
-                    errors.age ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    errors.age ? 'border-destructive' : 'border-input'
                   }`}
                   placeholder="25"
                 />
                 {errors.age && (
-                  <p className="mt-1 text-xs text-red-600">{errors.age}</p>
+                  <p className="mt-1 text-xs text-destructive">{errors.age}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Height (in) <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Height <span className="text-destructive">*</span>
                 </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.height || ''}
-                  onChange={(e) => setFormData({ ...formData, height: parseFloat(e.target.value) || undefined })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
-                    errors.height ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="70"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={Math.floor((formData.height || 0) / 12) || ''}
+                    onChange={(e) => {
+                      const feet = parseInt(e.target.value) || 0;
+                      const inches = (formData.height || 0) % 12;
+                      setFormData({ ...formData, height: feet * 12 + inches });
+                    }}
+                    className={`w-1/2 px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
+                      errors.height ? 'border-destructive' : 'border-input'
+                    }`}
+                    placeholder="5"
+                  />
+                  <span className="flex items-center text-foreground">ft</span>
+                  <input
+                    type="number"
+                    value={(formData.height || 0) % 12 || ''}
+                    onChange={(e) => {
+                      const feet = Math.floor((formData.height || 0) / 12);
+                      const inches = parseInt(e.target.value) || 0;
+                      setFormData({ ...formData, height: feet * 12 + inches });
+                    }}
+                    className={`w-1/2 px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
+                      errors.height ? 'border-destructive' : 'border-input'
+                    }`}
+                    placeholder="10"
+                  />
+                  <span className="flex items-center text-foreground">in</span>
+                </div>
                 {errors.height && (
-                  <p className="mt-1 text-xs text-red-600">{errors.height}</p>
+                  <p className="mt-1 text-xs text-destructive">{errors.height}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Weight (lbs) <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Weight (lbs) <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="number"
                   step="0.1"
                   value={formData.weight || ''}
                   onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) || undefined })}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
-                    errors.weight ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    errors.weight ? 'border-destructive' : 'border-input'
                   }`}
                   placeholder="180"
                 />
                 {errors.weight && (
-                  <p className="mt-1 text-xs text-red-600">{errors.weight}</p>
+                  <p className="mt-1 text-xs text-destructive">{errors.weight}</p>
                 )}
               </div>
             </div>
 
-            {/* Gender */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Gender <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  { value: 'male' as Gender, label: 'Male' },
-                  { value: 'female' as Gender, label: 'Female' },
-                  { value: 'other' as Gender, label: 'Other' },
-                  { value: 'prefer-not-to-say' as Gender, label: 'Prefer not to say' }
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setFormData({ ...formData, gender: option.value })}
-                    className={`px-4 py-3 rounded-lg border-2 transition-all ${
-                      formData.gender === option.value
-                        ? 'border-blue-600 bg-blue-50 text-blue-600'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              {errors.gender && (
-                <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {errors.gender}
-                </p>
-              )}
-            </div>
-
             {/* Experience Level */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Experience Level <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Experience Level <span className="text-destructive">*</span>
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
@@ -280,17 +263,17 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                     onClick={() => setFormData({ ...formData, fitnessLevel: option.value as any })}
                     className={`px-4 py-4 rounded-lg border-2 transition-all text-left ${
                       formData.fitnessLevel === option.value
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <div className="font-medium text-gray-900">{option.label}</div>
-                    <div className="text-sm text-gray-600">{option.desc}</div>
+                    <div className="font-medium text-foreground">{option.label}</div>
+                    <div className="text-sm text-muted-foreground">{option.desc}</div>
                   </button>
                 ))}
               </div>
               {errors.fitnessLevel && (
-                <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                <p className="mt-1 text-sm text-destructive flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   {errors.fitnessLevel}
                 </p>
@@ -301,7 +284,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
             <div className="flex justify-end pt-4">
               <button
                 onClick={handleNext}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all hover:scale-105 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all hover:scale-105 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
               >
                 Next Step
                 <ArrowRight className="w-5 h-5" />
@@ -312,21 +295,21 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
 
         {/* Step 2: Goal Selection */}
         {step === 2 && (
-          <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-right duration-300">
+          <div className="bg-card rounded-xl shadow-sm p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-right duration-300">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Target className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                <Target className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Your Goal</h2>
-                <p className="text-gray-600">What do you want to achieve?</p>
+                <h2 className="text-2xl font-bold text-foreground">Your Goal</h2>
+                <p className="text-muted-foreground">What do you want to achieve?</p>
               </div>
             </div>
 
             {/* Primary Goal */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Primary Goal <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-foreground mb-3">
+                Primary Goal <span className="text-destructive">*</span>
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
@@ -340,22 +323,22 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                     onClick={() => setFormData({ ...formData, primaryGoal: option.value })}
                     className={`px-5 py-4 rounded-lg border-2 transition-all text-left ${
                       formData.primaryGoal === option.value
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
                     }`}
                   >
                     <div className="text-2xl mb-2">{option.icon}</div>
-                    <div className="font-semibold text-gray-900 mb-1">
+                    <div className="font-semibold text-foreground mb-1">
                       {option.label.replace(option.icon + ' ', '')}
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-muted-foreground">
                       {getGoalDescription(option.value)}
                     </div>
                   </button>
                 ))}
               </div>
               {errors.primaryGoal && (
-                <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <p className="mt-2 text-sm text-destructive flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   {errors.primaryGoal}
                 </p>
@@ -363,12 +346,12 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
             </div>
 
             {/* Optional Targets */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Optional Targets</h3>
+            <div className="border-t border-border pt-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Optional Targets</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Target Weight (lbs)
                   </label>
                   <input
@@ -376,18 +359,18 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                     step="0.1"
                     value={formData.targetWeight || ''}
                     onChange={(e) => setFormData({ ...formData, targetWeight: parseFloat(e.target.value) || undefined })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
-                      errors.targetWeight ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
+                      errors.targetWeight ? 'border-destructive' : 'border-input'
                     }`}
                     placeholder="Optional"
                   />
                   {errors.targetWeight && (
-                    <p className="mt-1 text-xs text-red-600">{errors.targetWeight}</p>
+                    <p className="mt-1 text-xs text-destructive">{errors.targetWeight}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Target Body Fat (%)
                   </label>
                   <input
@@ -395,13 +378,13 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                     step="0.1"
                     value={formData.targetBodyFat || ''}
                     onChange={(e) => setFormData({ ...formData, targetBodyFat: parseFloat(e.target.value) || undefined })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-500 ${
-                      errors.targetBodyFat ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
+                      errors.targetBodyFat ? 'border-destructive' : 'border-input'
                     }`}
                     placeholder="Optional"
                   />
                   {errors.targetBodyFat && (
-                    <p className="mt-1 text-xs text-red-600">{errors.targetBodyFat}</p>
+                    <p className="mt-1 text-xs text-destructive">{errors.targetBodyFat}</p>
                   )}
                 </div>
               </div>
@@ -411,14 +394,14 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
             <div className="flex justify-between pt-4">
               <button
                 onClick={handleBack}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all hover:scale-105 flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-all hover:scale-105 flex items-center gap-2 font-medium"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Back
               </button>
               <button
                 onClick={handleNext}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all hover:scale-105 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all hover:scale-105 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
               >
                 Next Step
                 <ArrowRight className="w-5 h-5" />
@@ -429,43 +412,43 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
 
         {/* Step 3: Confirmation */}
         {step === 3 && (
-          <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-right duration-300">
+          <div className="bg-card rounded-xl shadow-sm p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-right duration-300">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">You're All Set!</h2>
-                <p className="text-gray-600">Review your information</p>
+                <h2 className="text-2xl font-bold text-foreground">You're All Set!</h2>
+                <p className="text-muted-foreground">Review your information</p>
               </div>
             </div>
 
             {/* Summary */}
-            <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+            <div className="bg-muted rounded-lg p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Name</p>
-                  <p className="font-medium text-gray-900">{formData.name}</p>
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <p className="font-medium text-foreground">{formData.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Age</p>
-                  <p className="font-medium text-gray-900">{formData.age} years</p>
+                  <p className="text-sm text-muted-foreground">Age</p>
+                  <p className="font-medium text-foreground">{formData.age} years</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Height</p>
-                  <p className="font-medium text-gray-900">{formData.height}" ({(formData.height! / 12).toFixed(1)}' {formData.height! % 12}")</p>
+                  <p className="text-sm text-muted-foreground">Height</p>
+                  <p className="font-medium text-foreground">{Math.floor((formData.height || 0) / 12)}' {(formData.height || 0) % 12}"</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Weight</p>
-                  <p className="font-medium text-gray-900">{formData.weight} lbs</p>
+                  <p className="text-sm text-muted-foreground">Weight</p>
+                  <p className="font-medium text-foreground">{formData.weight} lbs</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Experience</p>
-                  <p className="font-medium text-gray-900 capitalize">{formData.fitnessLevel}</p>
+                  <p className="text-sm text-muted-foreground">Experience</p>
+                  <p className="font-medium text-foreground capitalize">{formData.fitnessLevel}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Primary Goal</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-muted-foreground">Primary Goal</p>
+                  <p className="font-medium text-foreground">
                     {formData.primaryGoal?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                   </p>
                 </div>
@@ -473,11 +456,11 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
             </div>
 
             {/* Ready to Start Prompt */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 text-center">
+              <h3 className="text-xl font-bold text-foreground mb-2">
                 Ready to start tracking your first workout?
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-muted-foreground mb-6">
                 Let's begin your transformation journey. You can log a workout or record your starting measurements.
               </p>
             </div>
@@ -486,14 +469,14 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
             <div className="flex justify-between pt-4">
               <button
                 onClick={handleBack}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all hover:scale-105 flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-all hover:scale-105 flex items-center gap-2 font-medium"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Back
               </button>
               <button
                 onClick={handleComplete}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-105 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
+                className="px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all hover:scale-105 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
               >
                 Complete Setup
                 <CheckCircle className="w-5 h-5" />
