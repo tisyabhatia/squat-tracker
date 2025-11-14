@@ -49,3 +49,4 @@ Desktop.ini
 *.sln
 *.sw?
 FIREBASE_SETUP.md
+firebase.js
