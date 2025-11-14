@@ -35,10 +35,6 @@ export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
             Track every rep and <span className="text-white font-semibold">see your evolution.</span>
           </p>
 
-          {/* <p className="text-gray-400 text-lg mb-12">
-            Progressive overload • Volume tracking • Physique monitoring • All in one place
-          </p> */}
-
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <button
@@ -51,16 +47,6 @@ export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
               </div>
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity blur-xl" />
             </button>
-
-            {/* <button
-              onClick={onTryDemo}
-              className="px-8 py-5 bg-gray-800/50 backdrop-blur-sm border-2 border-gray-700 text-white rounded-xl font-semibold text-lg hover:bg-gray-700/50 transition-all hover:border-gray-600 w-full sm:w-auto"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <PlayCircle className="w-6 h-6" />
-                <span>Try Demo Mode</span>
-              </div>
-            </button> */}
           </div>
         </div>
 
@@ -90,14 +76,6 @@ export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
             <p className="text-gray-400 text-sm">Track measurements and photos to visualize your transformation</p>
           </div>
         </div>
-
-        {/* Footer */}
-        {/* <div className="text-center mt-12">
-        
-          <p className="text-gray-500 text-sm">
-            No social features. No distractions. Just you and your progress.
-          </p>
-        </div> */}
       </div>
     </div>
   );
