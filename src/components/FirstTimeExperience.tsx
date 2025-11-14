@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 import Authentication from './Authentication';
 import ComprehensiveOnboarding from './ComprehensiveOnboarding';
 import GuidedFirstWorkout from './GuidedFirstWorkout';
-import BodyMeasurements from './BodyMeasurements';
 import { OnboardingData, WorkoutSession, UserProfile } from '../types';
-import { Dumbbell, Ruler, TrendingUp } from 'lucide-react';
+import { Dumbbell, TrendingUp } from 'lucide-react';
 
 interface FirstTimeExperienceProps {
   exercises: any[];
   onComplete: (profile: UserProfile, firstWorkout?: WorkoutSession) => void;
 }
 
-type FlowStep = 'auth' | 'onboarding' | 'first-action-choice' | 'first-workout' | 'first-body-metrics' | 'complete';
+type FlowStep = 'auth' | 'onboarding' | 'first-action-choice' | 'first-workout' | 'complete';
 
 const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, onComplete }) => {
   const [currentStep, setCurrentStep] = useState<FlowStep>('auth');
@@ -73,23 +72,14 @@ const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, on
         isDemo: false,
         createdAt: new Date().toISOString(),
         firstWorkoutCompleted: true,
-        firstBodyMetricsLogged: false,
       };
 
       onComplete(profile, session);
     }
   };
 
-  const handleSkipToBodyMetrics = () => {
-    setCurrentStep('first-body-metrics');
-  };
-
-  const handleBodyMetricsBack = () => {
-    setCurrentStep('first-action-choice');
-  };
-
-  const handleSkipBodyMetrics = () => {
-    // Complete without body metrics
+  const handleSkipWorkout = () => {
+    // Complete without workout
     if (onboardingData) {
       const profile: UserProfile = {
         id: userId,
@@ -128,7 +118,6 @@ const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, on
         isDemo: false,
         createdAt: new Date().toISOString(),
         firstWorkoutCompleted: false,
-        firstBodyMetricsLogged: false,
       };
 
       onComplete(profile);
@@ -153,66 +142,51 @@ const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, on
   if (currentStep === 'first-action-choice') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-4xl w-full">
+        <div className="max-w-2xl w-full">
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <TrendingUp className="w-10 h-10 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Ready to Start Tracking Your Progress?
+              Ready to Start Your First Workout?
             </h1>
             <p className="text-lg text-gray-600">
-              Choose how you'd like to begin your transformation journey
+              Let's log your first workout and start building your training history
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="space-y-4">
             {/* Start Workout */}
             <button
               onClick={() => setCurrentStep('first-workout')}
-              className="p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-blue-600 text-left group"
+              className="w-full p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-blue-600 text-left group"
             >
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
-                <Dumbbell className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Log Your First Workout
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Start tracking your lifts and begin building your training history. We'll guide you through it step by step.
-              </p>
-              <div className="text-blue-600 font-medium group-hover:translate-x-2 transition-transform inline-flex items-center">
-                Start workout tracking →
+              <div className="flex items-start gap-6">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 transition-colors">
+                  <Dumbbell className="w-8 h-8 text-blue-600 group-hover:text-white transition-colors" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    Log Your First Workout
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    We'll guide you through tracking your first workout session step by step.
+                  </p>
+                  <div className="text-blue-600 font-medium group-hover:translate-x-2 transition-transform inline-flex items-center">
+                    Start workout tracking →
+                  </div>
+                </div>
               </div>
             </button>
 
-            {/* Log Body Metrics */}
-            <button
-              onClick={() => setCurrentStep('first-body-metrics')}
-              className="p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-green-600 text-left group"
-            >
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-600 transition-colors">
-                <Ruler className="w-8 h-8 text-green-600 group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Log Starting Measurements
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Record your body measurements and photos to track your physical transformation over time.
-              </p>
-              <div className="text-green-600 font-medium group-hover:translate-x-2 transition-transform inline-flex items-center">
-                Log body metrics →
-              </div>
-            </button>
-          </div>
-
-          <div className="text-center">
-            <button
-              onClick={handleSkipBodyMetrics}
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Skip for now, I'll do this later
-            </button>
+            <div className="text-center">
+              <button
+                onClick={handleSkipWorkout}
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Skip for now, I'll log my first workout later
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -224,13 +198,9 @@ const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, on
       <GuidedFirstWorkout
         exercises={exercises}
         onComplete={handleFirstWorkoutComplete}
-        onSkip={handleSkipToBodyMetrics}
+        onSkip={handleSkipWorkout}
       />
     );
-  }
-
-  if (currentStep === 'first-body-metrics') {
-    return <BodyMeasurements onBack={handleBodyMetricsBack} />;
   }
 
   return null;

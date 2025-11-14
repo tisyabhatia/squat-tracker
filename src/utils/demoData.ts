@@ -37,10 +37,10 @@ export function generateDemoProfile(): UserProfile {
         type: 'consistency',
         description: 'Complete 60 workouts in 6 months',
         target: 60,
-        current: 24,
+        current: 54,
         unit: 'workouts',
-        deadline: new Date(now.getFullYear(), now.getMonth() + 4, 1).toISOString(),
-        createdAt: subDays(now, 60).toISOString(),
+        deadline: new Date(now.getFullYear(), now.getMonth() + 2, 1).toISOString(),
+        createdAt: subDays(now, 126).toISOString(),
         completed: false,
       },
       {
@@ -67,20 +67,20 @@ export function generateDemoProfile(): UserProfile {
       },
     },
     stats: {
-      totalWorkouts: 24,
-      currentStreak: 2,
-      longestStreak: 7,
-      lastWorkoutDate: subDays(now, 2).toISOString(),
-      workoutsThisWeek: 1,
-      totalVolume: 347550, // Sum of all demo workouts
-      averageDuration: 52, // minutes
+      totalWorkouts: 54,
+      currentStreak: 3,
+      longestStreak: 12,
+      lastWorkoutDate: subDays(now, 1).toISOString(),
+      workoutsThisWeek: 2,
+      totalVolume: 783450, // Sum of all demo workouts
+      averageDuration: 54, // minutes
     },
     isDemo: true,
     createdAt: subDays(now, 60).toISOString(),
   };
 }
 
-// Generate demo workout history (24 workouts over 8 weeks)
+// Generate demo workout history (54 workouts over 18 weeks)
 export function generateDemoWorkouts(): WorkoutSession[] {
   const now = new Date();
   const workouts: WorkoutSession[] = [];
@@ -351,6 +351,76 @@ export function generateDemoWorkouts(): WorkoutSession[] {
     createWorkout(51, 'push', generatePushWorkout(180, 95, 50, 12, 38), 41, 9680),
     createWorkout(53, 'pull', generatePullWorkout(330, 125, 20, 50), 45, 12800),
     createWorkout(55, 'legs', generateLegsWorkout(210, 150, 250, 60, 100), 48, 15060)
+  );
+
+  // Week 9 - 58, 60, 62 days ago
+  workouts.push(
+    createWorkout(58, 'push', generatePushWorkout(175, 90, 50, 12, 35), 40, 9240),
+    createWorkout(60, 'pull', generatePullWorkout(325, 120, 20, 50), 44, 12360),
+    createWorkout(62, 'legs', generateLegsWorkout(205, 145, 240, 60, 95), 47, 14500)
+  );
+
+  // Week 10 - 65, 67, 69 days ago
+  workouts.push(
+    createWorkout(65, 'push', generatePushWorkout(170, 90, 45, 10, 35), 39, 8800),
+    createWorkout(67, 'pull', generatePullWorkout(320, 115, 18, 45), 43, 11920),
+    createWorkout(69, 'legs', generateLegsWorkout(200, 140, 230, 55, 95), 46, 13940)
+  );
+
+  // Week 11 - 72, 74, 76 days ago
+  workouts.push(
+    createWorkout(72, 'push', generatePushWorkout(165, 85, 45, 10, 32), 38, 8360),
+    createWorkout(74, 'pull', generatePullWorkout(315, 110, 18, 45), 42, 11480),
+    createWorkout(76, 'legs', generateLegsWorkout(195, 135, 220, 55, 90), 45, 13380)
+  );
+
+  // Week 12 - 79, 81, 83 days ago
+  workouts.push(
+    createWorkout(79, 'push', generatePushWorkout(160, 85, 40, 10, 32), 37, 7920),
+    createWorkout(81, 'pull', generatePullWorkout(310, 105, 15, 40), 41, 11040),
+    createWorkout(83, 'legs', generateLegsWorkout(190, 130, 210, 50, 90), 44, 12820)
+  );
+
+  // Week 13 - 86, 88, 90 days ago
+  workouts.push(
+    createWorkout(86, 'push', generatePushWorkout(155, 80, 40, 8, 30), 36, 7480),
+    createWorkout(88, 'pull', generatePullWorkout(305, 100, 15, 40), 40, 10600),
+    createWorkout(90, 'legs', generateLegsWorkout(185, 125, 200, 50, 85), 43, 12260)
+  );
+
+  // Week 14 - 93, 95, 97 days ago
+  workouts.push(
+    createWorkout(93, 'push', generatePushWorkout(150, 80, 35, 8, 30), 35, 7040),
+    createWorkout(95, 'pull', generatePullWorkout(300, 95, 12, 35), 39, 10160),
+    createWorkout(97, 'legs', generateLegsWorkout(180, 120, 190, 45, 85), 42, 11700)
+  );
+
+  // Week 15 - 100, 102, 104 days ago
+  workouts.push(
+    createWorkout(100, 'push', generatePushWorkout(145, 75, 35, 8, 28), 34, 6600),
+    createWorkout(102, 'pull', generatePullWorkout(295, 90, 12, 35), 38, 9720),
+    createWorkout(104, 'legs', generateLegsWorkout(175, 115, 180, 45, 80), 41, 11140)
+  );
+
+  // Week 16 - 107, 109, 111 days ago
+  workouts.push(
+    createWorkout(107, 'push', generatePushWorkout(140, 75, 30, 5, 28), 33, 6160),
+    createWorkout(109, 'pull', generatePullWorkout(290, 85, 10, 30), 37, 9280),
+    createWorkout(111, 'legs', generateLegsWorkout(170, 110, 170, 40, 80), 40, 10580)
+  );
+
+  // Week 17 - 114, 116, 118 days ago
+  workouts.push(
+    createWorkout(114, 'push', generatePushWorkout(135, 70, 30, 5, 25), 32, 5720),
+    createWorkout(116, 'pull', generatePullWorkout(285, 80, 10, 30), 36, 8840),
+    createWorkout(118, 'legs', generateLegsWorkout(165, 105, 160, 40, 75), 39, 10020)
+  );
+
+  // Week 18 - 121, 123, 125 days ago (earliest workouts)
+  workouts.push(
+    createWorkout(121, 'push', generatePushWorkout(130, 70, 25, 5, 25), 31, 5280),
+    createWorkout(123, 'pull', generatePullWorkout(280, 75, 8, 25), 35, 8400),
+    createWorkout(125, 'legs', generateLegsWorkout(160, 100, 150, 35, 75), 38, 9460)
   );
 
   return workouts;
