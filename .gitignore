@@ -50,3 +50,4 @@ Desktop.ini
 *.sw?
 FIREBASE_SETUP.md
 firebase.js
+*.env
