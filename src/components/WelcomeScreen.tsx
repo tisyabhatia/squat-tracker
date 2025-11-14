@@ -32,13 +32,12 @@ export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-300 mb-4 max-w-2xl mx-auto leading-relaxed">
-            You're here to transform. Track every rep, measure every inch,
-            and <span className="text-white font-semibold">see your evolution.</span>
+            Track every rep and <span className="text-white font-semibold">see your evolution.</span>
           </p>
 
-          <p className="text-gray-400 text-lg mb-12">
+          {/* <p className="text-gray-400 text-lg mb-12">
             Progressive overload • Volume tracking • Physique monitoring • All in one place
-          </p>
+          </p> */}
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
@@ -53,7 +52,7 @@ export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity blur-xl" />
             </button>
 
-            <button
+            {/* <button
               onClick={onTryDemo}
               className="px-8 py-5 bg-gray-800/50 backdrop-blur-sm border-2 border-gray-700 text-white rounded-xl font-semibold text-lg hover:bg-gray-700/50 transition-all hover:border-gray-600 w-full sm:w-auto"
             >
@@ -61,7 +60,7 @@ export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
                 <PlayCircle className="w-6 h-6" />
                 <span>Try Demo Mode</span>
               </div>
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -93,11 +92,12 @@ export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12">
+        {/* <div className="text-center mt-12">
+        
           <p className="text-gray-500 text-sm">
             No social features. No distractions. Just you and your progress.
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
