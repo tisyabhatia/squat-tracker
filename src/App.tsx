@@ -52,8 +52,6 @@ export default function App() {
 
   const navigation = [
     { id: 'home' as View, label: 'Home', icon: Home },
-    { id: 'active-workout' as View, label: 'Workout', icon: Play },
-    { id: 'generator' as View, label: 'Generate', icon: Zap },
     { id: 'exercises' as View, label: 'Exercises', icon: Dumbbell },
     { id: 'history' as View, label: 'History', icon: History },
     { id: 'dashboard' as View, label: 'Progress', icon: LayoutDashboard },
@@ -263,10 +261,10 @@ export default function App() {
             </div>
 
             {/* Streak Card */}
-            <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg p-6 text-white shadow-lg">
+            <div className="bg-gradient-to-br from-[#F2C4DE] to-[#AED8F2] rounded-lg p-6 text-[#2a2438]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm opacity-90 mb-1">Current Streak</p>
+                  <p className="text-sm opacity-75 mb-1">Current Streak</p>
                   <p className="text-4xl font-bold">{profile?.stats.currentStreak || getWorkoutStats().currentStreak} days</p>
                 </div>
                 <div className="text-6xl">🔥</div>
@@ -287,13 +285,13 @@ export default function App() {
               </div>
 
               <div
-                onClick={() => setCurrentView('dashboard')}
+                onClick={() => setCurrentView('exercises')}
                 className="p-8 bg-card rounded-lg border-2 border-border hover:border-primary hover:shadow-lg cursor-pointer transition-all hover:scale-105"
               >
-                <LayoutDashboard className="w-16 h-16 text-secondary mb-4" />
-                <h3 className="mb-2 text-foreground text-xl">View Progress</h3>
+                <Dumbbell className="w-16 h-16 text-secondary mb-4" />
+                <h3 className="mb-2 text-foreground text-xl">Browse Exercises</h3>
                 <p className="text-sm text-muted-foreground">
-                  Check your stats, achievements, and goals
+                  View exercise library and generate custom workouts
                 </p>
               </div>
             </div>
