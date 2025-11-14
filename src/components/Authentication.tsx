@@ -271,11 +271,7 @@ const Authentication: React.FC<AuthenticationProps> = ({ onAuthSuccess }) => {
               disabled={loading}
             />
             <label htmlFor="terms" className="text-sm text-muted-foreground">
-              I agree to the{' '}
-              <a href="#" className="text-primary hover:underline">Terms of Service</a>
-              {' '}and{' '}
-              <a href="#" className="text-primary hover:underline">Privacy Policy</a>,
-              including data collection and processing for app functionality.
+              I agree to the app collecting and processing data for app functionality.
             </label>
           </div>
 
