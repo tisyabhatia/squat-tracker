@@ -7,9 +7,7 @@ import { WorkoutHistory } from './components/WorkoutHistory';
 import { ActiveWorkout } from './components/ActiveWorkout';
 import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { Settings } from './components/Settings';
-import BodyMeasurements from './components/BodyMeasurements';
-import VolumeTracking from './components/VolumeTracking';
-import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap, LogOut, Ruler, Activity, Trophy, TrendingUp } from 'lucide-react';
+import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap, LogOut, Trophy, TrendingUp } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Badge } from './components/ui/badge';
 import { initializeDemoMode, isDemoMode, clearDemoMode } from './utils/demoData';
@@ -17,7 +15,7 @@ import { userProfileStorage, workoutSessionStorage } from './utils/storage';
 import { UserProfile, WorkoutSession } from './types';
 import { exerciseStorage } from './utils/storage';
 
-type View = 'welcome' | 'first-time-experience' | 'day-1-celebration' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator' | 'body-measurements' | 'volume-tracking';
+type View = 'welcome' | 'first-time-experience' | 'day-1-celebration' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator';
 
 export default function App() {
   // Clear old auth/onboarding data on mount if no profile exists
@@ -32,9 +30,7 @@ export default function App() {
 
   const [currentView, setCurrentView] = useState<View>(() => {
     checkAndCleanOldData();
-    // Check if in demo mode or has profile
-    const profile = userProfileStorage.get();
-    if (profile || isDemoMode()) return 'home';
+    // Always start with welcome screen (auth required each session)
     return 'welcome';
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -59,8 +55,6 @@ export default function App() {
     { id: 'active-workout' as View, label: 'Workout', icon: Play },
     { id: 'generator' as View, label: 'Generate', icon: Zap },
     { id: 'exercises' as View, label: 'Exercises', icon: Dumbbell },
-    { id: 'volume-tracking' as View, label: 'Volume', icon: Activity },
-    { id: 'body-measurements' as View, label: 'Body', icon: Ruler },
     { id: 'history' as View, label: 'History', icon: History },
     { id: 'dashboard' as View, label: 'Progress', icon: LayoutDashboard },
     { id: 'settings' as View, label: 'Settings', icon: SettingsIcon },
@@ -269,10 +263,10 @@ export default function App() {
             </div>
 
             {/* Streak Card */}
-            <div className="bg-gradient-to-br from-[#F2C4DE] to-[#AED8F2] rounded-lg p-6 text-[#2a2438]">
+            <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg p-6 text-white shadow-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm opacity-75 mb-1">Current Streak</p>
+                  <p className="text-sm opacity-90 mb-1">Current Streak</p>
                   <p className="text-4xl font-bold">{profile?.stats.currentStreak || getWorkoutStats().currentStreak} days</p>
                 </div>
                 <div className="text-6xl">🔥</div>
@@ -304,33 +298,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Bodybuilding Features */}
-            <div className="bg-card border-2 border-border rounded-lg p-6">
-              <h3 className="text-foreground mb-4 font-semibold">Bodybuilding Tools</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div
-                  onClick={() => setCurrentView('volume-tracking')}
-                  className="p-4 bg-muted/30 rounded-lg border border-border hover:border-primary hover:bg-muted/50 cursor-pointer transition-all"
-                >
-                  <Activity className="w-8 h-8 text-blue-600 mb-2" />
-                  <h4 className="text-foreground font-medium mb-1">Volume Tracking</h4>
-                  <p className="text-xs text-muted-foreground">
-                    Monitor weekly volume per muscle group
-                  </p>
-                </div>
-
-                <div
-                  onClick={() => setCurrentView('body-measurements')}
-                  className="p-4 bg-muted/30 rounded-lg border border-border hover:border-primary hover:bg-muted/50 cursor-pointer transition-all"
-                >
-                  <Ruler className="w-8 h-8 text-green-600 mb-2" />
-                  <h4 className="text-foreground font-medium mb-1">Body Measurements</h4>
-                  <p className="text-xs text-muted-foreground">
-                    Track your body composition and measurements
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {/* Goals Section */}
             {profile?.goals && profile.goals.length > 0 && (
@@ -386,8 +353,6 @@ export default function App() {
         {currentView === 'history' && <WorkoutHistory />}
         {currentView === 'active-workout' && <ActiveWorkout />}
         {currentView === 'exercises' && <ExerciseLibrary />}
-        {currentView === 'volume-tracking' && <VolumeTracking onBack={() => setCurrentView('home')} />}
-        {currentView === 'body-measurements' && <BodyMeasurements onBack={() => setCurrentView('home')} />}
         {currentView === 'settings' && <Settings />}
       </main>
     </div>

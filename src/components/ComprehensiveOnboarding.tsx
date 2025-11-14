@@ -139,7 +139,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
 
         {/* Step 1: Personal Stats */}
         {step === 1 && (
-          <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6">
+          <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-right duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <User className="w-6 h-6 text-blue-600" />
@@ -301,7 +301,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
             <div className="flex justify-end pt-4">
               <button
                 onClick={handleNext}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all hover:scale-105 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
               >
                 Next Step
                 <ArrowRight className="w-5 h-5" />
@@ -312,7 +312,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
 
         {/* Step 2: Goal Selection */}
         {step === 2 && (
-          <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6">
+          <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-right duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <Target className="w-6 h-6 text-blue-600" />
@@ -411,14 +411,14 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
             <div className="flex justify-between pt-4">
               <button
                 onClick={handleBack}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all hover:scale-105 flex items-center gap-2 font-medium"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Back
               </button>
               <button
                 onClick={handleNext}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all hover:scale-105 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
               >
                 Next Step
                 <ArrowRight className="w-5 h-5" />
@@ -429,7 +429,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
 
         {/* Step 3: Confirmation */}
         {step === 3 && (
-          <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6">
+          <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-right duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-600" />
@@ -486,14 +486,14 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
             <div className="flex justify-between pt-4">
               <button
                 onClick={handleBack}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all hover:scale-105 flex items-center gap-2 font-medium"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Back
               </button>
               <button
                 onClick={handleComplete}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-colors flex items-center gap-2 font-medium shadow-lg"
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all hover:scale-105 flex items-center gap-2 font-medium shadow-lg hover:shadow-xl"
               >
                 Complete Setup
                 <CheckCircle className="w-5 h-5" />
