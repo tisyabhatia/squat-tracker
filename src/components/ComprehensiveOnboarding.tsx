@@ -156,7 +156,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                  errors.name ? 'border-destructive' : 'border-input'
+                  errors.name ? 'border-destructive' : 'border-border'
                 }`}
                 placeholder="John Doe"
               />
@@ -179,7 +179,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                   value={formData.age || ''}
                   onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || undefined })}
                   className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                    errors.age ? 'border-destructive' : 'border-input'
+                    errors.age ? 'border-destructive' : 'border-border'
                   }`}
                   placeholder="25"
                 />
@@ -202,7 +202,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                       setFormData({ ...formData, height: feet * 12 + inches });
                     }}
                     className={`w-1/2 px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                      errors.height ? 'border-destructive' : 'border-input'
+                      errors.height ? 'border-destructive' : 'border-border'
                     }`}
                     placeholder="5"
                   />
@@ -216,7 +216,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                       setFormData({ ...formData, height: feet * 12 + inches });
                     }}
                     className={`w-1/2 px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                      errors.height ? 'border-destructive' : 'border-input'
+                      errors.height ? 'border-destructive' : 'border-border'
                     }`}
                     placeholder="10"
                   />
@@ -237,7 +237,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                   value={formData.weight || ''}
                   onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) || undefined })}
                   className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                    errors.weight ? 'border-destructive' : 'border-input'
+                    errors.weight ? 'border-destructive' : 'border-border'
                   }`}
                   placeholder="180"
                 />
@@ -360,7 +360,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                     value={formData.targetWeight || ''}
                     onChange={(e) => setFormData({ ...formData, targetWeight: parseFloat(e.target.value) || undefined })}
                     className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                      errors.targetWeight ? 'border-destructive' : 'border-input'
+                      errors.targetWeight ? 'border-destructive' : 'border-border'
                     }`}
                     placeholder="Optional"
                   />
@@ -379,7 +379,7 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                     value={formData.targetBodyFat || ''}
                     onChange={(e) => setFormData({ ...formData, targetBodyFat: parseFloat(e.target.value) || undefined })}
                     className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                      errors.targetBodyFat ? 'border-destructive' : 'border-input'
+                      errors.targetBodyFat ? 'border-destructive' : 'border-border'
                     }`}
                     placeholder="Optional"
                   />
