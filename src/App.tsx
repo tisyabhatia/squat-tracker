@@ -171,50 +171,50 @@ export default function App() {
   if (currentView === 'day-1-celebration') {
     const profile = getUserProfile();
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="max-w-2xl w-full text-center">
-          <div className="bg-white rounded-2xl shadow-2xl p-12 space-y-6">
-            <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto animate-bounce">
-              <Trophy className="w-12 h-12 text-white" />
+          <div className="bg-card border-2 border-border rounded-2xl shadow-lg p-12 space-y-6">
+            <div className="w-24 h-24 bg-gradient-to-r from-[#F2C4DE] to-[#AED8F2] rounded-full flex items-center justify-center mx-auto animate-bounce">
+              <Trophy className="w-12 h-12 text-[#2a2438]" />
             </div>
 
-            <h1 className="text-4xl font-bold text-gray-900">
+            <h1 className="text-4xl font-bold text-foreground">
               🎉 Workout Saved!
             </h1>
 
-            <p className="text-xl text-gray-700 leading-relaxed">
+            <p className="text-xl text-muted-foreground leading-relaxed">
               You've started your transformation.
             </p>
 
-            <div className="bg-gray-50 rounded-lg p-6 my-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Day 1 Stats</h3>
+            <div className="bg-accent/20 border border-accent/30 rounded-lg p-6 my-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Day 1 Stats</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <p className="text-3xl font-bold text-blue-600">{profile?.stats.totalWorkouts || 1}</p>
-                  <p className="text-sm text-gray-600">Workout</p>
+                  <p className="text-3xl font-bold text-primary">{profile?.stats.totalWorkouts || 1}</p>
+                  <p className="text-sm text-muted-foreground">Workout</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-3xl font-bold text-accent">
                     {((profile?.stats.totalVolume || 0) / 1000).toFixed(1)}k
                   </p>
-                  <p className="text-sm text-gray-600">Volume (lbs)</p>
+                  <p className="text-sm text-muted-foreground">Volume (lbs)</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-purple-600">{profile?.stats.currentStreak || 1}</p>
-                  <p className="text-sm text-gray-600">Day Streak</p>
+                  <p className="text-3xl font-bold text-secondary">{profile?.stats.currentStreak || 1}</p>
+                  <p className="text-sm text-muted-foreground">Day Streak</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <p className="text-gray-800 italic">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-6">
+              <p className="text-foreground italic">
                 "Consistency builds muscle. You've taken the first step."
               </p>
             </div>
 
             <button
               onClick={() => setCurrentView('home')}
-              className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-semibold text-lg shadow-lg flex items-center justify-center gap-2"
+              className="w-full px-8 py-4 bg-gradient-to-r from-[#F2C4DE] to-[#AED8F2] text-[#2a2438] rounded-lg hover:opacity-90 transition-all font-semibold text-lg shadow-lg flex items-center justify-center gap-2"
             >
               Continue to Dashboard
               <TrendingUp className="w-6 h-6" />
