@@ -161,7 +161,8 @@ export function Settings() {
         </CardContent>
       </Card>
 
-      {/* Notifications */}
+      {/* Notifications - Commented out for now */}
+      {/*
       <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground">
@@ -219,6 +220,7 @@ export function Settings() {
           </div>
         </CardContent>
       </Card>
+      */}
 
       {/* Data Management */}
       <Card className="bg-card border-border">
@@ -243,20 +245,6 @@ export function Settings() {
             </Button>
             <p className="text-sm text-muted-foreground mt-2">
               Download all your workout data as a backup
-            </p>
-          </div>
-
-          <div>
-            <Button
-              onClick={handleImportData}
-              variant="outline"
-              className="w-full justify-start"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Import Data
-            </Button>
-            <p className="text-sm text-muted-foreground mt-2">
-              Restore data from a previous backup
             </p>
           </div>
 
