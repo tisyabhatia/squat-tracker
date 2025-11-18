@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 import Authentication from './Authentication';
 import ComprehensiveOnboarding from './ComprehensiveOnboarding';
 import GuidedFirstWorkout from './GuidedFirstWorkout';
-import BodyMeasurements from './BodyMeasurements';
 import { OnboardingData, WorkoutSession, UserProfile } from '../types';
-import { Dumbbell, Ruler, TrendingUp } from 'lucide-react';
+import { Dumbbell, TrendingUp } from 'lucide-react';
 
 interface FirstTimeExperienceProps {
   exercises: any[];
   onComplete: (profile: UserProfile, firstWorkout?: WorkoutSession) => void;
 }
 
-type FlowStep = 'auth' | 'onboarding' | 'first-action-choice' | 'first-workout' | 'first-body-metrics' | 'complete';
+type FlowStep = 'auth' | 'onboarding' | 'first-action-choice' | 'first-workout' | 'complete';
 
 const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, onComplete }) => {
   const [currentStep, setCurrentStep] = useState<FlowStep>('auth');
@@ -73,22 +72,13 @@ const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, on
         isDemo: false,
         createdAt: new Date().toISOString(),
         firstWorkoutCompleted: true,
-        firstBodyMetricsLogged: false,
       };
 
       onComplete(profile, session);
     }
   };
 
-  const handleSkipToBodyMetrics = () => {
-    setCurrentStep('first-body-metrics');
-  };
-
-  const handleBodyMetricsBack = () => {
-    setCurrentStep('first-action-choice');
-  };
-
-  const handleSkipBodyMetrics = () => {
+  const handleSkipToHome = () => {
     // Complete without body metrics
     if (onboardingData) {
       const profile: UserProfile = {
@@ -128,7 +118,6 @@ const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, on
         isDemo: false,
         createdAt: new Date().toISOString(),
         firstWorkoutCompleted: false,
-        firstBodyMetricsLogged: false,
       };
 
       onComplete(profile);
@@ -186,30 +175,11 @@ const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, on
               </div>
             </button>
 
-            {/* Log Body Metrics */}
-            {/* <button
-              onClick={() => setCurrentStep('first-body-metrics')}
-              className="p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-transparent hover:border-green-600 text-left group"
-            >
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-600 transition-colors">
-                <Ruler className="w-8 h-8 text-green-600 group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Log Starting Measurements
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Record your body measurements and photos to track your physical transformation over time.
-              </p>
-              <div className="text-green-600 font-medium group-hover:translate-x-2 transition-transform inline-flex items-center">
-                Log body metrics →
-              </div>
-            </button>
-            */}
           </div>
 
           <div className="text-center">
             <button
-              onClick={handleSkipBodyMetrics}
+              onClick={handleSkipToHome}
               className="text-gray-600 hover:text-gray-900 transition-colors"
             >
               Skip for now, I'll do this later
@@ -225,13 +195,9 @@ const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, on
       <GuidedFirstWorkout
         exercises={exercises}
         onComplete={handleFirstWorkoutComplete}
-        onSkip={handleSkipToBodyMetrics}
+        onSkip={handleSkipToHome}
       />
     );
-  }
-
-  if (currentStep === 'first-body-metrics') {
-    return <BodyMeasurements onBack={handleBodyMetricsBack} />;
   }
 
   return null;
