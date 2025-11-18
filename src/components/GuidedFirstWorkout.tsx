@@ -9,7 +9,7 @@ interface GuidedFirstWorkoutProps {
 }
 
 const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onComplete, onSkip }) => {
-  const [mode, setMode] = useState<'choose' | 'template' | 'custom'>('choose');
+  const [mode, setMode] = useState<'choose' | 'template' | 'custom' | 'custom-build'>('choose');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [session, setSession] = useState<Partial<WorkoutSession>>({
     id: `workout-${Date.now()}`,
@@ -24,6 +24,8 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
   const [currentSet, setCurrentSet] = useState({ weight: '', reps: '', rpe: '' });
   const [error, setError] = useState<string | null>(null);
   const [startTime] = useState(Date.now());
+  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Pre-built templates for first workout
   const templates = [
@@ -75,6 +77,46 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
     setSelectedTemplate(templateId);
     setMode('template');
   };
+
+  const handleExerciseSelect = (exerciseName: string) => {
+    if (selectedExercises.includes(exerciseName)) {
+      // Remove if already selected
+      setSelectedExercises(selectedExercises.filter(e => e !== exerciseName));
+    } else {
+      // Add to selected exercises in order
+      setSelectedExercises([...selectedExercises, exerciseName]);
+    }
+  };
+
+  const handleStartCustomWorkout = () => {
+    if (selectedExercises.length === 0) {
+      setError('Please select at least one exercise');
+      return;
+    }
+
+    const exerciseLogs: ExerciseLog[] = selectedExercises.map((exerciseName, idx) => {
+      const exercise = exercises.find(e => e.name === exerciseName);
+      return {
+        exerciseId: exercise?.id || `exercise-${idx}`,
+        exerciseName,
+        sets: [],
+        completed: false
+      };
+    });
+
+    setSession({
+      ...session,
+      name: 'Custom Workout',
+      exercises: exerciseLogs
+    });
+    setMode('custom-build');
+    setError(null);
+  };
+
+  const filteredExercises = exercises.filter(ex =>
+    ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ex.primaryMuscles.some(m => m.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   const handleLogSet = () => {
     setError(null);
@@ -198,14 +240,7 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
                 Choose your own exercises and track them
               </p>
               <button
-                onClick={() => {
-                  setMode('custom');
-                  setSession({
-                    ...session,
-                    name: 'Custom Workout',
-                    exercises: []
-                  });
-                }}
+                onClick={() => setMode('custom')}
                 className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Start Custom Workout
@@ -223,8 +258,112 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
           </div>
         )}
 
+        {/* Custom Exercise Selection */}
+        {mode === 'custom' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setMode('choose')}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to options
+              </button>
+            </div>
+
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-6">
+              <h2 className="text-xl font-bold text-foreground mb-2">Build Your Custom Workout</h2>
+              <p className="text-muted-foreground mb-4">
+                Click on exercises to add them to your workout. They'll be ordered as you select them.
+              </p>
+              {selectedExercises.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedExercises.map((name, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm">
+                      <span>{idx + 1}. {name}</span>
+                      <button onClick={() => handleExerciseSelect(name)} className="hover:opacity-70">
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
+
+            {/* Search Bar */}
+            <div className="bg-card rounded-xl shadow-sm p-4 border border-border">
+              <input
+                type="text"
+                placeholder="Search exercises..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 border border-border rounded-lg bg-input text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            </div>
+
+            {/* Exercise Library */}
+            <div className="bg-card rounded-xl shadow-sm p-6 border border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-4">
+                Exercise Library ({filteredExercises.length} exercises)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                {filteredExercises.map((exercise) => {
+                  const isSelected = selectedExercises.includes(exercise.name);
+                  const position = selectedExercises.indexOf(exercise.name) + 1;
+                  return (
+                    <button
+                      key={exercise.id}
+                      onClick={() => handleExerciseSelect(exercise.name)}
+                      className={`p-4 border-2 rounded-lg text-left transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-semibold text-foreground mb-1">{exercise.name}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            {exercise.primaryMuscles.join(', ')}
+                          </p>
+                        </div>
+                        {isSelected && (
+                          <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
+                            {position}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Start Workout Button */}
+            {selectedExercises.length > 0 && (
+              <div className="sticky bottom-0 bg-background pt-4 pb-2 border-t border-border">
+                <button
+                  onClick={handleStartCustomWorkout}
+                  className="w-full px-6 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold flex items-center justify-center gap-2"
+                >
+                  <Play className="w-5 h-5" />
+                  Start Workout with {selectedExercises.length} Exercise{selectedExercises.length > 1 ? 's' : ''}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Template Workout Logging */}
-        {mode === 'template' && session.exercises && session.exercises.length > 0 && (
+        {(mode === 'template' || mode === 'custom-build') && session.exercises && session.exercises.length > 0 && (
           <div className="space-y-6">
             {/* Progress Bar */}
             <div className="bg-card rounded-xl shadow-sm p-6 border border-border">

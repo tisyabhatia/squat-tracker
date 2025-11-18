@@ -6,6 +6,7 @@ import { Badge } from './ui/badge';
 import { Play, Pause, Check, Clock, Dumbbell, ChevronRight, TrendingUp, Award, History, Trophy, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Modal, ConfirmModal } from './ui/modal';
 import { useToast } from '../contexts/ToastContext';
+import { useApp } from '../contexts/AppContext';
 
 interface SetData {
   weight: number;
@@ -30,6 +31,7 @@ interface PreviousPerformance {
 
 export function ActiveWorkout() {
   const { toast } = useToast();
+  const { settings } = useApp();
   const [isActive, setIsActive] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -39,6 +41,8 @@ export function ActiveWorkout() {
   const [error, setError] = useState<string | null>(null);
   const [showUpcoming, setShowUpcoming] = useState(true);
   const [showCompleted, setShowCompleted] = useState(true);
+  const [restTimeRemaining, setRestTimeRemaining] = useState<number | null>(null);
+  const [isResting, setIsResting] = useState(false);
 
   const [workout, setWorkout] = useState<{ name: string; exercises: Exercise[] }>({
     name: 'Full Body Strength',
@@ -160,6 +164,24 @@ export function ActiveWorkout() {
     return () => clearInterval(interval);
   }, [isActive]);
 
+  // Rest timer countdown
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isResting && restTimeRemaining !== null && restTimeRemaining > 0) {
+      interval = setInterval(() => {
+        setRestTimeRemaining(time => {
+          if (time === null || time <= 1) {
+            setIsResting(false);
+            toast.success('Rest time complete! Ready for next set');
+            return null;
+          }
+          return time - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isResting, restTimeRemaining, toast]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -204,8 +226,18 @@ export function ActiveWorkout() {
       toast.success(`New PR! ${progressCheck.message}`);
     }
 
+    // Start rest timer if not the last set of the workout
+    const isLastSetOfExercise = newWorkout.exercises[exerciseIndex].completedSets.length === newWorkout.exercises[exerciseIndex].sets;
+    const isLastExercise = exerciseIndex === workout.exercises.length - 1;
+
+    if (!isLastSetOfExercise || !isLastExercise) {
+      const defaultRestTime = settings?.defaultRestTime || 90;
+      setRestTimeRemaining(defaultRestTime);
+      setIsResting(true);
+    }
+
     // Auto-advance to next exercise if all sets are complete
-    if (newWorkout.exercises[exerciseIndex].completedSets.length === newWorkout.exercises[exerciseIndex].sets) {
+    if (isLastSetOfExercise) {
       if (exerciseIndex < workout.exercises.length - 1) {
         setTimeout(() => setCurrentExerciseIndex(exerciseIndex + 1), 500);
       }
@@ -475,6 +507,30 @@ export function ActiveWorkout() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Rest Timer */}
+              {isResting && restTimeRemaining !== null && (
+                <div className="mb-4 p-4 bg-accent/20 border-2 border-accent rounded-lg">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold mb-1 text-accent animate-pulse">
+                      {formatTime(restTimeRemaining)}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">Rest time remaining</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setIsResting(false);
+                        setRestTimeRemaining(null);
+                      }}
+                    >
+                      Skip Rest
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Workout Timer */}
               <div className="text-center mb-4">
                 <div className="text-5xl font-bold mb-2 text-foreground">{formatTime(elapsedTime)}</div>
                 <p className="text-sm text-muted-foreground">Total workout time</p>
