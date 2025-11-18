@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import FirstTimeExperience from './components/FirstTimeExperience';
 import { Dashboard } from './components/Dashboard';
@@ -37,11 +37,29 @@ export default function App() {
 
   const [currentView, setCurrentView] = useState<View>(() => {
     checkAndCleanOldData();
-    // Always start with welcome screen (auth required each session)
+    // Start with welcome, but we'll check auth in useEffect
     return 'welcome';
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showDemoBanner, setShowDemoBanner] = useState(isDemoMode());
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check for existing authentication on mount
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is authenticated, check if they have a profile
+        const profile = userProfileStorage.get();
+        if (profile) {
+          // User is logged in with profile, go to home
+          setCurrentView('home');
+        }
+      }
+      setIsCheckingAuth(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Safely get workout stats
   const getWorkoutStats = () => {
@@ -56,6 +74,18 @@ export default function App() {
   const getUserProfile = () => {
     return userProfileStorage.get();
   };
+
+  // Show loading screen while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const navigation = [
     { id: 'home' as View, label: 'Home', icon: Home },
