@@ -155,26 +155,27 @@ const FirstTimeExperience: React.FC<FirstTimeExperienceProps> = ({ exercises, on
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Start Workout */}
-            <button
-              onClick={() => setCurrentStep('first-workout')}
-              className="p-8 bg-card rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-border hover:border-primary text-left group"
-            >
-              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary transition-colors">
-                <Dumbbell className="w-8 h-8 text-primary group-hover:text-primary-foreground transition-colors" />
-              </div>
-              <h3 className="text-2xl font-bold text-foreground mb-2">
-                Log Your First Workout
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                Start tracking your lifts and begin building your training history. We'll guide you through it step by step.
-              </p>
-              <div className="text-primary font-medium group-hover:translate-x-2 transition-transform inline-flex items-center">
-                Start workout tracking →
-              </div>
-            </button>
-
+          <div className="flex justify-center mb-6">
+            <div className="w-full max-w-lg">
+              {/* Start Workout */}
+              <button
+                onClick={() => setCurrentStep('first-workout')}
+                className="w-full p-8 bg-card rounded-xl shadow-lg hover:shadow-xl transition-all border-2 border-border hover:border-primary text-center group"
+              >
+                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary transition-colors mx-auto">
+                  <Dumbbell className="w-8 h-8 text-primary group-hover:text-primary-foreground transition-colors" />
+                </div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">
+                  Log Your First Workout
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  Start tracking your lifts and begin building your training history. We'll guide you through it step by step.
+                </p>
+                <div className="text-primary font-medium group-hover:translate-x-2 transition-transform inline-flex items-center">
+                  Start workout tracking →
+                </div>
+              </button>
+            </div>
           </div>
 
           <div className="text-center">
