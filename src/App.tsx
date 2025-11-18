@@ -7,6 +7,7 @@ import { WorkoutHistory } from './components/WorkoutHistory';
 import { ActiveWorkout } from './components/ActiveWorkout';
 import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { Settings } from './components/Settings';
+import { SyncStatus } from './components/SyncStatus';
 import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap, LogOut, Trophy, TrendingUp } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Badge } from './components/ui/badge';
@@ -16,10 +17,14 @@ import { UserProfile, WorkoutSession } from './types';
 import { exerciseStorage } from './utils/storage';
 import { firestoreUserProfile, firestoreWorkouts } from './services/firestore';
 import { auth } from './config/firebase';
+import { useFirestoreSync } from './hooks/useFirestoreSync';
 
 type View = 'welcome' | 'first-time-experience' | 'day-1-celebration' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator';
 
 export default function App() {
+  // Enable Firestore real-time sync
+  const { syncStatus, lastSyncTime } = useFirestoreSync();
+
   // Clear old auth/onboarding data on mount if no profile exists
   const checkAndCleanOldData = () => {
     const profile = userProfileStorage.get();
@@ -218,6 +223,7 @@ export default function App() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-foreground">checkpoint</h1>
+              <SyncStatus status={syncStatus} lastSyncTime={lastSyncTime} className="hidden sm:flex" />
             </div>
 
             {/* Desktop Navigation */}
