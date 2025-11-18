@@ -25,13 +25,11 @@ export interface UserProfile {
   isDemo: boolean;
   createdAt: string;
   firstWorkoutCompleted: boolean;
-  firstBodyMetricsLogged: boolean;
   keyLifts?: {
     bench?: number;
     squat?: number;
     deadlift?: number;
   };
-  bodyMetrics?: BodyMetrics[];
 }
 
 export interface UserStats {
@@ -253,7 +251,6 @@ export interface ProgressMetrics {
   workoutsThisMonth: number;
   lastWorkoutDate?: string;
   personalRecords: PersonalRecord[];
-  bodyMetrics?: BodyMetrics[];
 }
 
 export interface PersonalRecord {
@@ -264,28 +261,6 @@ export interface PersonalRecord {
   value: number;
   date: string;
   previousRecord?: number;
-}
-
-export interface BodyMetrics {
-  id: string;
-  date: string;
-  weight?: number;
-  bodyFat?: number;
-  measurements?: {
-    chest?: number;
-    waist?: number;
-    hips?: number;
-    leftBicep?: number;
-    rightBicep?: number;
-    leftThigh?: number;
-    rightThigh?: number;
-    leftCalf?: number;
-    rightCalf?: number;
-    shoulders?: number;
-    neck?: number;
-  };
-  photos?: string[];
-  notes?: string;
 }
 
 // ==================== Volume Tracking ====================

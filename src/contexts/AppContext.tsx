@@ -13,8 +13,19 @@ import {
   settingsStorage,
   userProfileStorage,
   activeWorkoutStorage,
+  goalStorage,
+  personalRecordStorage,
 } from '../utils/storage';
 import { initializeSeedData } from '../data/seedData';
+import {
+  firestoreUserProfile,
+  firestoreWorkouts,
+  firestoreGoals,
+  firestorePersonalRecords,
+  firestoreBatch,
+  hasFirestoreData,
+} from '../services/firestore';
+import { auth } from '../config/firebase';
 
 interface AppContextType {
   // Exercises
@@ -52,6 +63,11 @@ interface AppContextType {
 
   // Refresh data
   refreshData: () => void;
+
+  // Firestore sync
+  isSyncing: boolean;
+  syncToFirestore: () => Promise<void>;
+  loadFromFirestore: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -63,11 +79,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activeWorkout, setActiveWorkoutState] = useState<WorkoutSession | null>(null);
   const [settings, setSettings] = useState<AppSettings>(settingsStorage.get());
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   // Initialize data on mount
   useEffect(() => {
     initializeSeedData();
     loadData();
+
+    // Try to load from Firestore if user is authenticated
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        await loadFromFirestore();
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const loadData = () => {
@@ -81,6 +107,88 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refreshData = () => {
     loadData();
+  };
+
+  // Firestore sync methods
+  const syncToFirestore = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('No user logged in, skipping Firestore sync');
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      // Sync all data to Firestore
+      await firestoreBatch.syncAllData(user.uid, {
+        profile: userProfile || undefined,
+        workouts: workoutSessions,
+        goals: goalStorage.getAll(),
+        personalRecords: personalRecordStorage.getAll(),
+      });
+      console.log('Successfully synced to Firestore');
+    } catch (error) {
+      console.error('Error syncing to Firestore:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const loadFromFirestore = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('No user logged in, skipping Firestore load');
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      // Check if user has data in Firestore
+      const hasData = await hasFirestoreData(user.uid);
+
+      if (hasData) {
+        // Load profile
+        const profile = await firestoreUserProfile.get(user.uid);
+        if (profile) {
+          userProfileStorage.set(profile);
+          setUserProfile(profile);
+        }
+
+        // Load workouts
+        const workouts = await firestoreWorkouts.getAll(user.uid);
+        if (workouts.length > 0) {
+          workouts.forEach(workout => workoutSessionStorage.add(workout));
+          setWorkoutSessions(workouts);
+        }
+
+        // Load goals
+        const goals = await firestoreGoals.getAll(user.uid);
+        if (goals.length > 0) {
+          goals.forEach(goal => goalStorage.add(goal));
+        }
+
+        // Load personal records
+        const records = await firestorePersonalRecords.getAll(user.uid);
+        if (records.length > 0) {
+          records.forEach(record => personalRecordStorage.add(record));
+        }
+
+        console.log('Successfully loaded data from Firestore');
+      } else {
+        // No data in Firestore, sync local data if it exists
+        const localProfile = userProfileStorage.get();
+        if (localProfile) {
+          console.log('Migrating local data to Firestore...');
+          await syncToFirestore();
+        }
+      }
+    } catch (error) {
+      console.error('Error loading from Firestore:', error);
+      // Fall back to local storage
+      loadData();
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // Exercise methods
@@ -122,19 +230,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Workout Session methods
   const getSessionById = (id: string) => workoutSessions.find((s) => s.id === id);
 
-  const addWorkoutSession = (session: WorkoutSession) => {
+  const addWorkoutSession = async (session: WorkoutSession) => {
+    // Save to localStorage
     workoutSessionStorage.add(session);
     setWorkoutSessions([session, ...workoutSessions]);
+
+    // Sync to Firestore
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await firestoreWorkouts.add(user.uid, session);
+      } catch (error) {
+        console.error('Error syncing workout to Firestore:', error);
+      }
+    }
   };
 
-  const updateWorkoutSession = (id: string, updates: Partial<WorkoutSession>) => {
+  const updateWorkoutSession = async (id: string, updates: Partial<WorkoutSession>) => {
+    // Update localStorage
     workoutSessionStorage.update(id, updates);
     setWorkoutSessions(workoutSessions.map((s) => (s.id === id ? { ...s, ...updates } : s)));
+
+    // Sync to Firestore
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await firestoreWorkouts.update(user.uid, id, updates);
+      } catch (error) {
+        console.error('Error syncing workout update to Firestore:', error);
+      }
+    }
   };
 
-  const deleteWorkoutSession = (id: string) => {
+  const deleteWorkoutSession = async (id: string) => {
+    // Remove from localStorage
     workoutSessionStorage.remove(id);
     setWorkoutSessions(workoutSessions.filter((s) => s.id !== id));
+
+    // Delete from Firestore
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await firestoreWorkouts.delete(user.uid, id);
+      } catch (error) {
+        console.error('Error deleting workout from Firestore:', error);
+      }
+    }
   };
 
   // Active Workout methods
@@ -155,11 +296,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // User Profile methods
-  const updateUserProfile = (updates: Partial<UserProfile>) => {
+  const updateUserProfile = async (updates: Partial<UserProfile>) => {
     if (userProfile) {
       const newProfile = { ...userProfile, ...updates };
+      // Update localStorage
       userProfileStorage.set(newProfile);
       setUserProfile(newProfile);
+
+      // Sync to Firestore
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          await firestoreUserProfile.update(user.uid, updates);
+        } catch (error) {
+          console.error('Error syncing profile to Firestore:', error);
+        }
+      }
     }
   };
 
@@ -186,6 +338,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     userProfile,
     updateUserProfile,
     refreshData,
+    isSyncing,
+    syncToFirestore,
+    loadFromFirestore,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
