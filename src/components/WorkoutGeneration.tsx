@@ -2,16 +2,23 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Clock, Target, Zap, ChevronRight, Play, Dumbbell } from 'lucide-react';
+import { Clock, Target, Zap, ChevronRight, Play, Dumbbell, ArrowLeft, Check, Plus } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 import { useApp } from '../contexts/AppContext';
 import { WorkoutTemplate } from '../types';
 import { useToast } from '../contexts/ToastContext';
 
-export function WorkoutGeneration() {
-  const { workoutTemplates, getExerciseById, setActiveWorkout } = useApp();
+interface WorkoutGenerationProps {
+  onNavigate: (view: string) => void;
+}
+
+export function WorkoutGeneration({ onNavigate }: WorkoutGenerationProps) {
+  const { workoutTemplates, getExerciseById, setActiveWorkout, exercises } = useApp();
   const { toast } = useToast();
   const [selectedTemplate, setSelectedTemplate] = useState<WorkoutTemplate | null>(null);
+  const [mode, setMode] = useState<'templates' | 'custom'>('templates');
+  const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleStartWorkout = (template: WorkoutTemplate) => {
     // Create a new workout session from the template
@@ -35,8 +42,51 @@ export function WorkoutGeneration() {
     };
 
     setActiveWorkout(workoutSession);
-    toast.success('Workout started! Navigate to the Workout tab to begin.');
+    toast.success('Workout started!');
+    onNavigate('active-workout');
   };
+
+  const handleExerciseSelect = (exerciseId: string, exerciseName: string) => {
+    if (selectedExercises.includes(exerciseId)) {
+      setSelectedExercises(selectedExercises.filter(e => e !== exerciseId));
+    } else {
+      setSelectedExercises([...selectedExercises, exerciseId]);
+    }
+  };
+
+  const handleStartCustomWorkout = () => {
+    if (selectedExercises.length === 0) {
+      toast.error('Please select at least one exercise');
+      return;
+    }
+
+    const workoutSession = {
+      id: `workout-${Date.now()}`,
+      name: 'Custom Workout',
+      type: 'custom' as const,
+      startTime: new Date().toISOString(),
+      duration: 0,
+      exercises: selectedExercises.map(exerciseId => {
+        const exercise = getExerciseById(exerciseId);
+        return {
+          exerciseId,
+          exerciseName: exercise?.name || 'Unknown Exercise',
+          sets: [],
+          completed: false,
+        };
+      }),
+      status: 'in-progress' as const,
+    };
+
+    setActiveWorkout(workoutSession);
+    toast.success('Custom workout started!');
+    onNavigate('active-workout');
+  };
+
+  const filteredExercises = exercises?.filter(ex =>
+    ex.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ex.primaryMuscles.some((m: string) => m.toLowerCase().includes(searchQuery.toLowerCase()))
+  ) || [];
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -171,13 +221,137 @@ export function WorkoutGeneration() {
     );
   }
 
+  // Custom Workout Mode
+  if (mode === 'custom') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="mb-2 text-foreground">Create Custom Workout</h1>
+            <p className="text-muted-foreground">
+              Select exercises to build your custom workout
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setMode('templates');
+              setSelectedExercises([]);
+              setSearchQuery('');
+            }}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Templates
+          </Button>
+        </div>
+
+        {/* Selected Exercises */}
+        {selectedExercises.length > 0 && (
+          <Card className="bg-card border-border">
+            <CardHeader>
+              <CardTitle className="text-foreground">Selected Exercises ({selectedExercises.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {selectedExercises.map((exerciseId, idx) => {
+                  const exercise = getExerciseById(exerciseId);
+                  return (
+                    <div key={exerciseId} className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm">
+                      <span>{idx + 1}. {exercise?.name}</span>
+                      <button
+                        onClick={() => handleExerciseSelect(exerciseId, exercise?.name || '')}
+                        className="hover:opacity-70"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              <Button
+                onClick={handleStartCustomWorkout}
+                className="w-full"
+                size="lg"
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Start Workout with {selectedExercises.length} Exercise{selectedExercises.length > 1 ? 's' : ''}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Search Bar */}
+        <Card className="bg-card border-border">
+          <CardContent className="pt-6">
+            <input
+              type="text"
+              placeholder="Search exercises by name or muscle group..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-3 border border-border rounded-lg bg-input text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Exercise Library */}
+        <div>
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            Exercise Library ({filteredExercises.length} exercises)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredExercises.map((exercise) => {
+              const isSelected = selectedExercises.includes(exercise.id);
+              const position = selectedExercises.indexOf(exercise.id) + 1;
+              return (
+                <Card
+                  key={exercise.id}
+                  className={`cursor-pointer transition-all ${
+                    isSelected
+                      ? 'border-primary bg-primary/10 hover:bg-primary/20'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onClick={() => handleExerciseSelect(exercise.id, exercise.name)}
+                >
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-foreground text-base">{exercise.name}</CardTitle>
+                        <CardDescription className="text-muted-foreground capitalize text-sm">
+                          {exercise.primaryMuscles.join(', ')}
+                        </CardDescription>
+                      </div>
+                      {isSelected && (
+                        <div className="w-7 h-7 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ml-2">
+                          {position}
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="mb-2 text-foreground">Workout Templates</h1>
-        <p className="text-muted-foreground">
-          Choose from {workoutTemplates.length} pre-made workout programs designed for your goals
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="mb-2 text-foreground">Workout Templates</h1>
+          <p className="text-muted-foreground">
+            Choose from {workoutTemplates.length} pre-made workout programs or create your own
+          </p>
+        </div>
+        <Button
+          onClick={() => setMode('custom')}
+          variant="outline"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Custom Workout
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

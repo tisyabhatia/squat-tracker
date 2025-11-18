@@ -407,7 +407,7 @@ export default function App() {
         )}
 
         {currentView === 'dashboard' && <Dashboard />}
-        {currentView === 'generator' && <WorkoutGeneration />}
+        {currentView === 'generator' && <WorkoutGeneration onNavigate={(view) => setCurrentView(view)} />}
         {currentView === 'history' && <WorkoutHistory />}
         {currentView === 'active-workout' && <ActiveWorkout />}
         {currentView === 'exercises' && <ExerciseLibrary />}

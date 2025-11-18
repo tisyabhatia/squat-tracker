@@ -192,11 +192,13 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Your First Workout</h1>
-          <p className="text-muted-foreground">Let's get started on your transformation journey</p>
-        </div>
+        {/* Header - Only show during initial choice */}
+        {mode === 'choose' && (
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Your First Workout</h1>
+            <p className="text-muted-foreground">Let's get started on your transformation journey</p>
+          </div>
+        )}
 
         {/* Choose Mode */}
         {mode === 'choose' && (
