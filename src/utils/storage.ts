@@ -7,7 +7,6 @@ import {
   OnboardingData,
   AppSettings,
   PersonalRecord,
-  BodyMetrics,
   Goal,
 } from '../types';
 
@@ -22,7 +21,6 @@ const STORAGE_KEYS = {
   ACTIVE_WORKOUT: 'checkpoint_active_workout',
   PROGRESS_METRICS: 'checkpoint_progress_metrics',
   PERSONAL_RECORDS: 'checkpoint_personal_records',
-  BODY_METRICS: 'checkpoint_body_metrics',
   GOALS: 'checkpoint_goals',
   SETTINGS: 'checkpoint_settings',
   WORKOUT_STATS: 'workoutStats',
@@ -239,21 +237,6 @@ export const personalRecordStorage = {
   },
 };
 
-// ==================== Body Metrics ====================
-
-export const bodyMetricsStorage = {
-  getAll: (): BodyMetrics[] => safeGet<BodyMetrics[]>(STORAGE_KEYS.BODY_METRICS, []),
-  add: (metrics: BodyMetrics): boolean => {
-    const allMetrics = bodyMetricsStorage.getAll();
-    allMetrics.push(metrics);
-    return safeSet(STORAGE_KEYS.BODY_METRICS, allMetrics);
-  },
-  getRecent: (limit: number = 10): BodyMetrics[] => {
-    const metrics = bodyMetricsStorage.getAll();
-    return metrics.slice(-limit).reverse();
-  },
-};
-
 // ==================== Goals ====================
 
 export const goalStorage = {
@@ -358,7 +341,6 @@ export const dataManagement = {
       workoutHistory: workoutSessionStorage.getAll(),
       progressMetrics: progressMetricsStorage.get(),
       personalRecords: personalRecordStorage.getAll(),
-      bodyMetrics: bodyMetricsStorage.getAll(),
       goals: goalStorage.getAll(),
       settings: settingsStorage.get(),
       exportDate: new Date().toISOString(),
@@ -373,7 +355,6 @@ export const dataManagement = {
       if (data.workoutHistory) safeSet(STORAGE_KEYS.WORKOUT_HISTORY, data.workoutHistory);
       if (data.progressMetrics) progressMetricsStorage.set(data.progressMetrics);
       if (data.personalRecords) safeSet(STORAGE_KEYS.PERSONAL_RECORDS, data.personalRecords);
-      if (data.bodyMetrics) safeSet(STORAGE_KEYS.BODY_METRICS, data.bodyMetrics);
       if (data.goals) safeSet(STORAGE_KEYS.GOALS, data.goals);
       if (data.settings) settingsStorage.set(data.settings);
       return true;

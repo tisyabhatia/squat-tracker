@@ -14,6 +14,8 @@ import { initializeDemoMode, isDemoMode, clearDemoMode } from './utils/demoData'
 import { userProfileStorage, workoutSessionStorage } from './utils/storage';
 import { UserProfile, WorkoutSession } from './types';
 import { exerciseStorage } from './utils/storage';
+import { firestoreUserProfile, firestoreWorkouts } from './services/firestore';
+import { auth } from './config/firebase';
 
 type View = 'welcome' | 'first-time-experience' | 'day-1-celebration' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator';
 
@@ -71,13 +73,35 @@ export default function App() {
     window.location.reload(); // Reload to load demo data into context
   };
 
-  const handleFirstTimeExperienceComplete = (profile: UserProfile, firstWorkout?: WorkoutSession) => {
-    // Save profile
+  const handleFirstTimeExperienceComplete = async (profile: UserProfile, firstWorkout?: WorkoutSession) => {
+    // Save profile to localStorage
     userProfileStorage.set(profile);
+
+    // Sync profile to Firestore
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        await firestoreUserProfile.set(user.uid, profile);
+        console.log('Profile synced to Firestore');
+      } catch (error) {
+        console.error('Error syncing profile to Firestore:', error);
+      }
+    }
 
     // Save first workout if provided
     if (firstWorkout) {
       workoutSessionStorage.add(firstWorkout);
+
+      // Sync first workout to Firestore
+      if (user) {
+        try {
+          await firestoreWorkouts.add(user.uid, firstWorkout);
+          console.log('First workout synced to Firestore');
+        } catch (error) {
+          console.error('Error syncing first workout to Firestore:', error);
+        }
+      }
+
       // Show Day 1 celebration
       setCurrentView('day-1-celebration');
     } else {
