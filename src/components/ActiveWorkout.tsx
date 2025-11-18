@@ -250,12 +250,18 @@ export function ActiveWorkout() {
   };
 
   const confirmFinishWorkout = () => {
+    // Calculate workout metrics
+    const totalVolume = workout.exercises.reduce((total, exercise) => {
+      return total + exercise.completedSets.reduce((sum, set) => sum + (set.weight * set.reps), 0);
+    }, 0);
+
     // Save workout data to localStorage
     const workoutData = {
       name: workout.name,
       exercises: workout.exercises,
       duration: elapsedTime,
-      completedAt: new Date().toISOString()
+      completedAt: new Date().toISOString(),
+      totalVolume
     };
 
     // Save to workout history
@@ -263,12 +269,26 @@ export function ActiveWorkout() {
     history.push(workoutData);
     localStorage.setItem('workoutHistory', JSON.stringify(history));
 
-    // Update workout stats
+    // Update workout stats (legacy)
     const stats = JSON.parse(localStorage.getItem('workoutStats') || '{"workoutsThisWeek": 0, "totalMinutes": 0, "currentStreak": 0}');
     stats.workoutsThisWeek += 1;
     stats.totalMinutes += Math.floor(elapsedTime / 60);
     stats.currentStreak += 1;
     localStorage.setItem('workoutStats', JSON.stringify(stats));
+
+    // Update user profile stats
+    const profile = JSON.parse(localStorage.getItem('checkpoint_user_profile') || 'null');
+    if (profile && profile.stats) {
+      profile.stats.totalWorkouts = (profile.stats.totalWorkouts || 0) + 1;
+      profile.stats.workoutsThisWeek = (profile.stats.workoutsThisWeek || 0) + 1;
+      profile.stats.totalVolume = (profile.stats.totalVolume || 0) + totalVolume;
+      profile.stats.currentStreak = (profile.stats.currentStreak || 0) + 1;
+      profile.stats.averageDuration = Math.floor(
+        ((profile.stats.averageDuration || 0) * (profile.stats.totalWorkouts - 1) + Math.floor(elapsedTime / 60)) /
+        profile.stats.totalWorkouts
+      );
+      localStorage.setItem('checkpoint_user_profile', JSON.stringify(profile));
+    }
 
     toast.success('Workout completed! Great job!');
 

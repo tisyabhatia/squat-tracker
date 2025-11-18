@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Exercise, WorkoutSession, ExerciseLog, SetLog, WorkoutType } from '../types';
-import { Dumbbell, Plus, Check, ArrowLeft, AlertCircle, Trophy, Clock } from 'lucide-react';
+import { Dumbbell, Plus, Check, ArrowLeft, AlertCircle, Trophy, Clock, Play } from 'lucide-react';
 
 interface GuidedFirstWorkoutProps {
   exercises: Exercise[];
@@ -244,15 +244,6 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
                 className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Start Custom Workout
-              </button>
-            </div>
-
-            <div className="text-center">
-              <button
-                onClick={onSkip}
-                className="text-primary hover:underline"
-              >
-                Skip to body metrics logging
               </button>
             </div>
           </div>
