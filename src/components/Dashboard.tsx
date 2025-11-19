@@ -3,8 +3,10 @@ import { Progress } from './ui/progress';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Clock, Dumbbell, Target, Award, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useApp } from '../contexts/AppContext';
 
 export function Dashboard() {
+  const { workoutSessions, userProfile } = useApp();
   const [onboardingData, setOnboardingData] = useState<any>(null);
   const [workoutStats, setWorkoutStats] = useState({
     workoutsThisWeek: 0,
@@ -34,14 +36,23 @@ export function Dashboard() {
       setOnboardingData(JSON.parse(data));
     }
 
-    // Load workout stats from localStorage (initially empty)
-    const stats = localStorage.getItem('workoutStats');
-    if (stats) {
-      setWorkoutStats(JSON.parse(stats));
+    // Use user profile stats if available, otherwise fall back to localStorage
+    if (userProfile?.stats) {
+      setWorkoutStats({
+        workoutsThisWeek: userProfile.stats.workoutsThisWeek || 0,
+        totalMinutes: userProfile.stats.averageDuration * userProfile.stats.totalWorkouts || 0,
+        currentStreak: userProfile.stats.currentStreak || 0,
+      });
+    } else {
+      // Load workout stats from localStorage (initially empty)
+      const stats = localStorage.getItem('workoutStats');
+      if (stats) {
+        setWorkoutStats(JSON.parse(stats));
+      }
     }
 
-    // Load and process workout history
-    const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
+    // Use workout sessions from context instead of localStorage
+    const history = workoutSessions.filter(w => w.status === 'completed');
 
     // Calculate weekly data
     const now = new Date();
@@ -60,7 +71,7 @@ export function Dashboard() {
     ];
 
     history.forEach((workout: any) => {
-      const workoutDate = new Date(workout.completedAt);
+      const workoutDate = new Date(workout.endTime || workout.completedAt || workout.startTime);
       const daysSinceWeekStart = Math.floor((workoutDate.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24));
 
       if (daysSinceWeekStart >= 0 && daysSinceWeekStart < 7) {
@@ -83,7 +94,7 @@ export function Dashboard() {
     ];
 
     history.forEach((workout: any) => {
-      const workoutDate = new Date(workout.completedAt);
+      const workoutDate = new Date(workout.endTime || workout.completedAt || workout.startTime);
       const daysSinceStart = Math.floor((workoutDate.getTime() - fourWeeksAgo.getTime()) / (1000 * 60 * 60 * 24));
 
       if (daysSinceStart >= 0 && daysSinceStart < 28) {
@@ -95,12 +106,14 @@ export function Dashboard() {
 
         if (workout.exercises) {
           workout.exercises.forEach((exercise: any) => {
-            if (exercise.completedSets) {
-              exercise.completedSets.forEach((set: any) => {
+            // Handle both old format (completedSets) and new format (sets array)
+            const sets = exercise.sets || exercise.completedSets || [];
+            sets.forEach((set: any) => {
+              if (set.completed !== false) { // Include if completed is true or undefined
                 workoutVolume += (set.weight || 0) * (set.reps || 0);
                 maxWeight = Math.max(maxWeight, set.weight || 0);
-              });
-            }
+              }
+            });
           });
         }
 
@@ -118,7 +131,7 @@ export function Dashboard() {
     }));
 
     setProgressData(finalProgress);
-  }, []);
+  }, [workoutSessions, userProfile]);
 
   const stats = [
     { label: 'Workouts This Week', value: workoutStats.workoutsThisWeek.toString(), icon: Dumbbell, color: 'text-primary' },
