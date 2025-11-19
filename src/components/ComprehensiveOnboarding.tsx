@@ -359,14 +359,10 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                   <p className="font-medium text-foreground">{Math.floor((formData.height || 0) / 12)}' {(formData.height || 0) % 12}"</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Weight</p>
-                  <p className="font-medium text-foreground">{formData.weight} lbs</p>
-                </div>
-                <div>
                   <p className="text-sm text-muted-foreground">Experience</p>
                   <p className="font-medium text-foreground capitalize">{formData.fitnessLevel}</p>
                 </div>
-                <div>
+                <div className="col-span-2">
                   <p className="text-sm text-muted-foreground">Primary Goal</p>
                   <p className="font-medium text-foreground">
                     {formData.primaryGoal?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
