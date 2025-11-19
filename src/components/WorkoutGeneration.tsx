@@ -33,6 +33,12 @@ export function WorkoutGeneration({ onStartWorkout }: WorkoutGenerationProps = {
           exerciseName: exercise?.name || 'Unknown Exercise',
           sets: [],
           completed: false,
+          // BUG FIX #1: Preserve template metadata - prevents data loss
+          targetSets: ex.sets,
+          targetReps: ex.targetReps,
+          targetWeight: ex.targetWeight,
+          restTime: ex.restTime,
+          notes: ex.notes,
         };
       }),
       status: 'in-progress' as const,

@@ -192,6 +192,11 @@ export interface ExerciseLog {
   sets: SetLog[];
   notes?: string;
   completed: boolean;
+  // Template metadata - preserved from WorkoutTemplate for reference
+  targetSets?: number;
+  targetReps?: number | string;
+  targetWeight?: number;
+  restTime?: number;
 }
 
 export interface SetLog {
