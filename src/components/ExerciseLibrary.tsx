@@ -24,7 +24,7 @@ export function ExerciseLibrary() {
         >
           ← Back to Exercises
         </Button>
-        <WorkoutGeneration />
+        <WorkoutGeneration onStartWorkout={() => setShowGenerate(false)} />
       </div>
     );
   }
@@ -32,7 +32,6 @@ export function ExerciseLibrary() {
   const categories: { value: string; label: string }[] = [
     { value: 'all', label: 'All' },
     { value: 'strength', label: 'Strength' },
-    { value: 'cardio', label: 'Cardio' },
     { value: 'core', label: 'Core' },
   ];
 

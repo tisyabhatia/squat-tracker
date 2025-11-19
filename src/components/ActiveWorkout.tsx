@@ -201,10 +201,11 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
   };
 
   const handleLogSet = (exerciseIndex: number) => {
-    const weight = parseFloat(currentWeight) || 0;
+    const weight = parseFloat(currentWeight);
     const reps = parseInt(currentReps) || 0;
 
-    if (weight === 0 || reps === 0) {
+    // Allow negative weights for assisted exercises (pull-ups, dips, etc.)
+    if (isNaN(weight) || reps === 0) {
       setError('Please enter both weight and reps');
       return;
     }

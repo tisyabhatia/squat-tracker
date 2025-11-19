@@ -1,12 +1,10 @@
-import { Button } from './ui/button';
-import { TrendingUp, PlayCircle, Zap, Target, Activity } from 'lucide-react';
+import { TrendingUp, Zap, Target, Activity, Dumbbell } from 'lucide-react';
 
 interface WelcomeScreenProps {
   onStartFresh: () => void;
-  onTryDemo: () => void;
 }
 
-export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
+export function WelcomeScreen({ onStartFresh }: WelcomeScreenProps) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Pattern */}
@@ -35,27 +33,17 @@ export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
             Track every rep and <span className="text-foreground font-semibold">see your evolution.</span>
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+          {/* CTA Button */}
+          <div className="flex justify-center items-center mb-12">
             <button
               onClick={onStartFresh}
-              className="group relative px-8 py-5 bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl font-bold text-lg shadow-2xl hover:shadow-primary/50 transition-all hover:scale-105 w-full sm:w-auto"
+              className="group relative px-12 py-6 bg-gradient-to-r from-primary to-secondary text-primary-foreground rounded-xl font-bold text-xl shadow-2xl hover:shadow-primary/50 transition-all hover:scale-105"
             >
               <div className="flex items-center justify-center gap-3">
-                <TrendingUp className="w-6 h-6 group-hover:translate-y-[-2px] transition-transform" />
-                <span>Start Building</span>
+                <TrendingUp className="w-7 h-7 group-hover:translate-y-[-2px] transition-transform" />
+                <span>Start Your Journey</span>
               </div>
               <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl opacity-0 group-hover:opacity-20 transition-opacity blur-xl" />
-            </button>
-
-            <button
-              onClick={onTryDemo}
-              className="group relative px-8 py-5 bg-card border-2 border-border text-foreground rounded-xl font-bold text-lg hover:border-primary transition-all hover:scale-105 w-full sm:w-auto"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <PlayCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                <span>Try Demo</span>
-              </div>
             </button>
           </div>
         </div>
@@ -72,18 +60,18 @@ export function WelcomeScreen({ onStartFresh, onTryDemo }: WelcomeScreenProps) {
 
           <div className="bg-card/40 backdrop-blur-sm border border-border rounded-xl p-6 text-center hover:bg-card/60 transition-all">
             <div className="w-12 h-12 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Target className="w-6 h-6 text-secondary" />
+              <Dumbbell className="w-6 h-6 text-secondary" />
             </div>
-            <h3 className="text-foreground font-semibold mb-2">Volume Tracking</h3>
-            <p className="text-muted-foreground text-sm">Optimize muscle growth with science-backed volume ranges</p>
+            <h3 className="text-foreground font-semibold mb-2">200+ Exercises</h3>
+            <p className="text-muted-foreground text-sm">Comprehensive exercise library with form tips and muscle targeting</p>
           </div>
 
           <div className="bg-card/40 backdrop-blur-sm border border-border rounded-xl p-6 text-center hover:bg-card/60 transition-all">
             <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-3">
               <TrendingUp className="w-6 h-6 text-accent-foreground" />
             </div>
-            <h3 className="text-foreground font-semibold mb-2">Physique Monitoring</h3>
-            <p className="text-muted-foreground text-sm">Track measurements and photos to visualize your transformation</p>
+            <h3 className="text-foreground font-semibold mb-2">Performance Tracking</h3>
+            <p className="text-muted-foreground text-sm">Visualize your progress with detailed history and analytics</p>
           </div>
         </div>
       </div>
