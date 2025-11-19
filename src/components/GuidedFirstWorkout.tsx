@@ -125,7 +125,8 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
     const reps = parseInt(currentSet.reps);
     const rpe = currentSet.rpe ? parseInt(currentSet.rpe) : undefined;
 
-    if (!weight || weight <= 0) {
+    // Allow negative weights for assisted exercises (pull-ups, dips, etc.)
+    if (isNaN(weight)) {
       setError('Please enter a valid weight');
       return;
     }
@@ -155,6 +156,18 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
     if (currentExerciseIndex < session.exercises!.length - 1) {
       setCurrentExerciseIndex(currentExerciseIndex + 1);
       setCurrentSet({ weight: '', reps: '', rpe: '' });
+    }
+  };
+
+  const handleSkipExercise = () => {
+    // Mark current exercise as skipped by moving to next
+    if (currentExerciseIndex < session.exercises!.length - 1) {
+      setCurrentExerciseIndex(currentExerciseIndex + 1);
+      setCurrentSet({ weight: '', reps: '', rpe: '' });
+      setError(null);
+    } else {
+      // If it's the last exercise, allow finishing even if no sets logged
+      handleFinishWorkout();
     }
   };
 
@@ -474,27 +487,41 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
               )}
 
               {/* Navigation */}
-              <div className="flex justify-between">
+              <div className="flex gap-4">
                 {currentExerciseIndex < session.exercises.length - 1 ? (
-                  <button
-                    onClick={handleNextExercise}
-                    disabled={session.exercises[currentExerciseIndex].sets.length === 0}
-                    className="px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next Exercise →
-                  </button>
+                  <>
+                    <button
+                      onClick={handleSkipExercise}
+                      className="px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                    >
+                      Skip Exercise
+                    </button>
+                    <button
+                      onClick={handleNextExercise}
+                      disabled={session.exercises[currentExerciseIndex].sets.length === 0}
+                      className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next Exercise →
+                    </button>
+                  </>
                 ) : (
-                  <div />
+                  <>
+                    <button
+                      onClick={handleSkipExercise}
+                      className="px-6 py-3 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors"
+                    >
+                      Skip & Finish
+                    </button>
+                    <button
+                      onClick={handleFinishWorkout}
+                      disabled={!canFinish}
+                      className="flex-1 px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <Trophy className="w-5 h-5" />
+                      Finish Workout
+                    </button>
+                  </>
                 )}
-
-                <button
-                  onClick={handleFinishWorkout}
-                  disabled={!canFinish}
-                  className="px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  <Trophy className="w-5 h-5" />
-                  Finish Workout
-                </button>
               </div>
             </div>
 

@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Settings as SettingsIcon, User, Bell, Download, Upload, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Settings as SettingsIcon, User, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { dataManagement } from '../utils/storage';
 import { clearDemoMode } from '../utils/demoData';
@@ -23,43 +23,6 @@ export function Settings() {
     updateSettings(updates);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2000);
-  };
-
-  const handleExportData = () => {
-    const data = dataManagement.exportAll();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `checkpoint-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Data exported successfully!');
-  };
-
-  const handleImportData = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target?.result as string);
-          if (dataManagement.importAll(data)) {
-            toast.success('Data imported successfully! Refreshing...');
-            setTimeout(() => window.location.reload(), 1500);
-          } else {
-            toast.error('Error importing data. Please check the file format.');
-          }
-        } catch (error) {
-          toast.error('Error parsing file. Please ensure it\'s a valid JSON file.');
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
   };
 
   const handleClearData = () => {
@@ -171,38 +134,10 @@ export function Settings() {
             Data Management
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Export, import, or clear your data
+            Manage your account and data
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Button
-              onClick={handleExportData}
-              variant="outline"
-              className="w-full justify-start"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export Data (JSON)
-            </Button>
-            <p className="text-sm text-muted-foreground mt-2">
-              Download all your workout data as a backup
-            </p>
-          </div>
-
-          <div>
-            <Button
-              onClick={handleImportData}
-              variant="outline"
-              className="w-full justify-start"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Import Data (JSON)
-            </Button>
-            <p className="text-sm text-muted-foreground mt-2">
-              Restore your data from a previous backup
-            </p>
-          </div>
-
           <div>
             <Button
               onClick={handleStartOver}

@@ -8,7 +8,11 @@ import { useApp } from '../contexts/AppContext';
 import { WorkoutTemplate } from '../types';
 import { useToast } from '../contexts/ToastContext';
 
-export function WorkoutGeneration() {
+interface WorkoutGenerationProps {
+  onStartWorkout?: () => void;
+}
+
+export function WorkoutGeneration({ onStartWorkout }: WorkoutGenerationProps = {}) {
   const { workoutTemplates, getExerciseById, setActiveWorkout } = useApp();
   const { toast } = useToast();
   const [selectedTemplate, setSelectedTemplate] = useState<WorkoutTemplate | null>(null);
@@ -35,7 +39,12 @@ export function WorkoutGeneration() {
     };
 
     setActiveWorkout(workoutSession);
-    toast.success('Workout started! Navigate to the Workout tab to begin.');
+    toast.success('Workout started!');
+
+    // Automatically navigate to active workout
+    if (onStartWorkout) {
+      onStartWorkout();
+    }
   };
 
   const getDifficultyColor = (difficulty: string) => {

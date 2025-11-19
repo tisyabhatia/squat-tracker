@@ -101,13 +101,6 @@ export default function App() {
     setCurrentView('first-time-experience');
   };
 
-  const handleTryDemo = () => {
-    initializeDemoMode();
-    setShowDemoBanner(true);
-    setCurrentView('home');
-    window.location.reload(); // Reload to load demo data into context
-  };
-
   const handleFirstTimeExperienceComplete = async (profile: UserProfile, firstWorkout?: WorkoutSession) => {
     // Save profile to localStorage
     userProfileStorage.set(profile);
@@ -434,7 +427,7 @@ export default function App() {
         )}
 
         {currentView === 'dashboard' && <Dashboard />}
-        {currentView === 'generator' && <WorkoutGeneration />}
+        {currentView === 'generator' && <WorkoutGeneration onStartWorkout={() => setCurrentView('active-workout')} />}
         {currentView === 'history' && <WorkoutHistory />}
         {currentView === 'active-workout' && <ActiveWorkout onBack={() => setCurrentView('home')} />}
         {currentView === 'exercises' && <ExerciseLibrary />}
