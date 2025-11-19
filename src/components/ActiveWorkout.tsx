@@ -217,6 +217,43 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Early return if no workout - must be before using workout.exercises
+  if (!workout) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="mb-2 text-foreground">Active Workout</h1>
+            <p className="text-muted-foreground">
+              Track your sets and reps in real-time
+            </p>
+          </div>
+          {onBack && (
+            <Button variant="ghost" onClick={() => onBack()}>
+              ← Back to Home
+            </Button>
+          )}
+        </div>
+
+        <Card className="bg-card border-border">
+          <CardContent className="p-12 text-center">
+            <Dumbbell className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
+            <h3 className="mb-2 text-foreground text-xl font-semibold">No Active Workout</h3>
+            <p className="text-muted-foreground mb-6">
+              Start a workout from the Workout Templates to begin tracking your exercises
+            </p>
+            {onBack && (
+              <Button onClick={() => onBack()}>
+                Go to Workout Templates
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Now safe to access workout.exercises
   const currentExercise = workout.exercises[currentExerciseIndex];
   const totalSets = workout.exercises.reduce((acc, ex) => acc + ex.sets, 0);
   const completedSets = workout.exercises.reduce((acc, ex) => acc + ex.completedSets.length, 0);
@@ -390,42 +427,6 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
       onBack();
     }
   };
-
-  // Show message if no active workout
-  if (!workout) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="mb-2 text-foreground">Active Workout</h1>
-            <p className="text-muted-foreground">
-              Track your sets and reps in real-time
-            </p>
-          </div>
-          {onBack && (
-            <Button variant="ghost" onClick={() => onBack()}>
-              ← Back to Home
-            </Button>
-          )}
-        </div>
-
-        <Card className="bg-card border-border">
-          <CardContent className="p-12 text-center">
-            <Dumbbell className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
-            <h3 className="mb-2 text-foreground text-xl font-semibold">No Active Workout</h3>
-            <p className="text-muted-foreground mb-6">
-              Start a workout from the Workout Templates to begin tracking your exercises
-            </p>
-            {onBack && (
-              <Button onClick={() => onBack()}>
-                Go to Workout Templates
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
