@@ -29,7 +29,11 @@ interface PreviousPerformance {
   maxWeight: number;
 }
 
-export function ActiveWorkout() {
+interface ActiveWorkoutProps {
+  onBack?: () => void;
+}
+
+export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
   const { toast } = useToast();
   const { settings, addWorkoutSession, userProfile, updateUserProfile } = useApp();
   const [isActive, setIsActive] = useState(false);
@@ -345,13 +349,31 @@ export function ActiveWorkout() {
     return { totalVolume, totalReps, maxWeight };
   };
 
+  const handleCancelWorkout = () => {
+    if (completedSets > 0) {
+      if (!confirm('You have unsaved progress. Are you sure you want to cancel this workout?')) {
+        return;
+      }
+    }
+    if (onBack) {
+      onBack();
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="mb-2 text-foreground">Active Workout</h1>
-        <p className="text-muted-foreground">
-          Track your sets and reps in real-time
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="mb-2 text-foreground">Active Workout</h1>
+          <p className="text-muted-foreground">
+            Track your sets and reps in real-time
+          </p>
+        </div>
+        {onBack && (
+          <Button variant="ghost" onClick={handleCancelWorkout}>
+            ← Back to Home
+          </Button>
+        )}
       </div>
 
       {/* Error Display */}

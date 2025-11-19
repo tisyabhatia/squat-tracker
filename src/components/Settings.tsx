@@ -34,6 +34,7 @@ export function Settings() {
     a.download = `checkpoint-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    toast.success('Data exported successfully!');
   };
 
   const handleImportData = () => {
@@ -161,66 +162,6 @@ export function Settings() {
         </CardContent>
       </Card>
 
-      {/* Notifications - Commented out for now */}
-      {/*
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-foreground">
-            <Bell className="w-5 h-5 text-primary" />
-            Notifications
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Manage notification preferences
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-foreground font-medium">Workout Reminders</p>
-              <p className="text-sm text-muted-foreground">Get reminded about scheduled workouts</p>
-            </div>
-            <Switch
-              checked={settings.notifications.workoutReminders}
-              onCheckedChange={(checked) =>
-                handleUpdateSettings({
-                  notifications: { ...settings.notifications, workoutReminders: checked },
-                })
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-foreground font-medium">Achievement Notifications</p>
-              <p className="text-sm text-muted-foreground">Celebrate your milestones</p>
-            </div>
-            <Switch
-              checked={settings.notifications.achievements}
-              onCheckedChange={(checked) =>
-                handleUpdateSettings({
-                  notifications: { ...settings.notifications, achievements: checked },
-                })
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-foreground font-medium">Streak Reminders</p>
-              <p className="text-sm text-muted-foreground">Stay motivated with your streak</p>
-            </div>
-            <Switch
-              checked={settings.notifications.streakReminders}
-              onCheckedChange={(checked) =>
-                handleUpdateSettings({
-                  notifications: { ...settings.notifications, streakReminders: checked },
-                })
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
-      */}
 
       {/* Data Management */}
       <Card className="bg-card border-border">
@@ -245,6 +186,20 @@ export function Settings() {
             </Button>
             <p className="text-sm text-muted-foreground mt-2">
               Download all your workout data as a backup
+            </p>
+          </div>
+
+          <div>
+            <Button
+              onClick={handleImportData}
+              variant="outline"
+              className="w-full justify-start"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Import Data (JSON)
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Restore your data from a previous backup
             </p>
           </div>
 

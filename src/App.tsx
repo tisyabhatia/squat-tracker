@@ -272,6 +272,20 @@ export default function App() {
                   </Button>
                 );
               })}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (confirm('Are you sure you want to sign out?')) {
+                    auth.signOut();
+                    window.location.reload();
+                  }
+                }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="w-4 h-4 md:mr-2" />
+                <span className="hidden lg:inline">Sign Out</span>
+              </Button>
             </nav>
 
             {/* Mobile Menu Button */}
@@ -305,6 +319,19 @@ export default function App() {
                     </Button>
                   );
                 })}
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to sign out?')) {
+                      auth.signOut();
+                      window.location.reload();
+                    }
+                  }}
+                  className="justify-start col-span-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
               </div>
             </nav>
           )}
@@ -409,7 +436,7 @@ export default function App() {
         {currentView === 'dashboard' && <Dashboard />}
         {currentView === 'generator' && <WorkoutGeneration />}
         {currentView === 'history' && <WorkoutHistory />}
-        {currentView === 'active-workout' && <ActiveWorkout />}
+        {currentView === 'active-workout' && <ActiveWorkout onBack={() => setCurrentView('home')} />}
         {currentView === 'exercises' && <ExerciseLibrary />}
         {currentView === 'settings' && <Settings />}
       </main>
