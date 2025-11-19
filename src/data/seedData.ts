@@ -1358,7 +1358,7 @@ export const seedWorkoutTemplates: WorkoutTemplate[] = [
       { exerciseId: 'ex-036', order: 1, sets: 4, targetReps: '15', restTime: 30 },
       { exerciseId: 'ex-031', order: 2, sets: 4, targetDuration: 30, restTime: 30 },
       { exerciseId: 'ex-042', order: 3, sets: 4, targetReps: '10', restTime: 30 },
-      { exerciseId: 'ex-035', order: 4, sets: 4, targetDuration: 60, restTime: 30 },
+      { exerciseId: 'ex-049', order: 4, sets: 4, targetReps: '15', restTime: 30 },
       { exerciseId: 'ex-045', order: 5, sets: 3, targetDuration: 30, restTime: 45 },
     ],
     isCustom: false,

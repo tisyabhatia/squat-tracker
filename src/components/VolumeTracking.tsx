@@ -55,18 +55,25 @@ const VolumeTracking: React.FC<VolumeTrackingProps> = ({ onBack }) => {
 
       // Process workout history
       history.forEach((workout: any) => {
-        if (!workout.completedAt || !workout.exercises) return;
+        // Use endTime (or fallback to completedAt for backwards compatibility)
+        const workoutEndTime = workout.endTime || workout.completedAt;
+        if (!workoutEndTime || !workout.exercises) return;
 
-        const workoutDate = new Date(workout.completedAt);
+        const workoutDate = new Date(workoutEndTime);
         if (!isWithinInterval(workoutDate, { start: weekStart, end: weekEnd })) return;
 
         workout.exercises.forEach((exerciseLog: any) => {
-          const exercise = exercises.find(e => e.name === exerciseLog.name);
+          // Use exerciseName (current format) or name (legacy format)
+          const exerciseName = exerciseLog.exerciseName || exerciseLog.name;
+          const exercise = exercises.find(e => e.name === exerciseName);
           if (!exercise) return;
 
           // Count sets for each muscle group targeted
           const allMuscles = [...exercise.primaryMuscles, ...exercise.secondaryMuscles];
-          const completedSets = exerciseLog.completedSets || [];
+          // Use sets (current format) or completedSets (legacy format)
+          const allSets = exerciseLog.sets || exerciseLog.completedSets || [];
+          // Filter for completed sets only
+          const completedSets = allSets.filter((set: any) => set.completed !== false);
 
           allMuscles.forEach((muscle: MuscleGroup) => {
             const current = volumeMap.get(muscle);
