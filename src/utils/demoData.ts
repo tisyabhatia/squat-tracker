@@ -9,11 +9,17 @@ export function generateDemoProfile(): UserProfile {
     id: 'demo-user-001',
     name: 'Alex Johnson',
     email: 'alex.demo@checkpoint.app',
+    // BUG FIX: Add required fields that were missing
+    age: 28,
+    height: 70, // 5'10" in inches
+    weight: 180, // lbs
+    gender: 'male',
     fitnessLevel: 'intermediate',
     trainingSplit: 'ppl',
     weeklyFrequency: 3,
     equipment: ['barbell', 'dumbbell', 'bench', 'squat-rack', 'cable-machine', 'pull-up-bar'],
-    currentWeight: 180,
+    primaryGoal: 'lean-bulk',
+    targetWeight: 190, // Optional but good for demo
     keyLifts: {
       bench: 205,
       squat: 245,
@@ -77,6 +83,7 @@ export function generateDemoProfile(): UserProfile {
     },
     isDemo: true,
     createdAt: subDays(now, 60).toISOString(),
+    firstWorkoutCompleted: true, // Demo user has workout history
   };
 }
 
