@@ -132,15 +132,39 @@ export function useFirestoreSync() {
 
       // Listen to workout changes
       const unsubscribeWorkouts = firestoreWorkouts.subscribe(userId, (workouts) => {
-        // Merge with local storage (Firestore is source of truth)
-        console.log('🔄 Workouts updated from Firestore');
+        // BUG FIX: Actually save Firestore data to localStorage to update UI
+        if (workouts && workouts.length > 0) {
+          // Clear existing and replace with Firestore data (source of truth)
+          const allWorkouts = workoutSessionStorage.getAll();
+          const firestoreIds = new Set(workouts.map(w => w.id));
+
+          // Keep local-only workouts, replace Firestore ones
+          const localOnly = allWorkouts.filter(w => !firestoreIds.has(w.id));
+
+          // Merge: Firestore workouts + local-only workouts
+          const merged = [...workouts, ...localOnly].sort((a, b) =>
+            new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+          );
+
+          // Save merged data
+          merged.forEach(w => workoutSessionStorage.add(w));
+
+          console.log('🔄 Workouts updated from Firestore:', workouts.length);
+        }
         setLastSyncTime(new Date());
+        // Force page reload to update React state (since this is outside React context)
+        window.dispatchEvent(new Event('storage'));
       });
 
       // Listen to goal changes
       const unsubscribeGoals = firestoreGoals.subscribe(userId, (goals) => {
-        console.log('🔄 Goals updated from Firestore');
+        // BUG FIX: Actually save Firestore data to localStorage
+        if (goals && goals.length > 0) {
+          goals.forEach(g => goalStorage.add(g));
+          console.log('🔄 Goals updated from Firestore:', goals.length);
+        }
         setLastSyncTime(new Date());
+        window.dispatchEvent(new Event('storage'));
       });
 
       // Store unsubscribe functions

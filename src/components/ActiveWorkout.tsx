@@ -97,18 +97,26 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
         const workout = history[i];
         if (!workout.exercises) continue;
 
-        workout.exercises.forEach((exercise: Exercise) => {
-          if (!performanceMap.has(exercise.name) && exercise.completedSets.length > 0) {
-            const totalVolume = exercise.completedSets.reduce(
-              (sum: number, set: SetData) => sum + (set.weight * set.reps),
+        workout.exercises.forEach((exercise: any) => {
+          // BUG FIX: Saved workouts have 'sets' array (SetLog[]), not 'completedSets'
+          const exerciseSets = exercise.sets || exercise.completedSets || [];
+          const completedSets = exerciseSets.filter((set: any) => set.completed !== false);
+
+          if (!performanceMap.has(exercise.exerciseName) && completedSets.length > 0) {
+            const totalVolume = completedSets.reduce(
+              (sum: number, set: any) => sum + ((set.weight || 0) * (set.reps || 0)),
               0
             );
-            const maxWeight = Math.max(...exercise.completedSets.map((set: SetData) => set.weight));
+            const maxWeight = Math.max(...completedSets.map((set: any) => set.weight || 0));
 
-            performanceMap.set(exercise.name, {
-              exerciseName: exercise.name,
-              sets: exercise.completedSets,
-              date: workout.completedAt,
+            performanceMap.set(exercise.exerciseName, {
+              exerciseName: exercise.exerciseName,
+              sets: completedSets.map((set: any) => ({
+                weight: set.weight || 0,
+                reps: set.reps || 0,
+                timestamp: set.timestamp || new Date().toISOString()
+              })),
+              date: workout.endTime || workout.completedAt || workout.startTime,
               totalVolume,
               maxWeight,
             });

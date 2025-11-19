@@ -22,12 +22,10 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
     name: '',
     age: undefined,
     height: undefined,
-    weight: undefined,
-    gender: undefined,
+    weight: 150, // Default value since it's still required by type but not shown
+    gender: 'prefer-not-to-say' as Gender, // Default since not shown
     fitnessLevel: undefined,
     primaryGoal: undefined,
-    targetWeight: undefined,
-    targetBodyFat: undefined,
   });
 
   const validateStep1 = (): boolean => {
@@ -49,16 +47,6 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
       newErrors.height = 'Height must be between 3ft and 8ft';
     }
 
-    if (!formData.weight) {
-      newErrors.weight = 'Weight is required';
-    } else if (formData.weight < 50 || formData.weight > 400) {
-      newErrors.weight = 'Weight must be between 50 and 400 lbs';
-    }
-
-    if (!formData.gender) {
-      newErrors.gender = 'Gender is required';
-    }
-
     if (!formData.fitnessLevel) {
       newErrors.fitnessLevel = 'Experience level is required';
     }
@@ -72,14 +60,6 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
 
     if (!formData.primaryGoal) {
       newErrors.primaryGoal = 'Please select a primary goal';
-    }
-
-    if (formData.targetWeight && (formData.targetWeight < 50 || formData.targetWeight > 400)) {
-      newErrors.targetWeight = 'Target weight must be between 50 and 400 lbs';
-    }
-
-    if (formData.targetBodyFat && (formData.targetBodyFat < 3 || formData.targetBodyFat > 50)) {
-      newErrors.targetBodyFat = 'Target body fat must be between 3% and 50%';
     }
 
     setErrors(newErrors);
@@ -172,42 +152,8 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
               )}
             </div>
 
-            {/* Gender Selection */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Gender <span className="text-destructive">*</span>
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {[
-                  { value: 'male', label: 'Male' },
-                  { value: 'female', label: 'Female' },
-                  { value: 'other', label: 'Other' },
-                  { value: 'prefer-not-to-say', label: 'Prefer not to say' }
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, gender: option.value as any })}
-                    className={`px-4 py-3 rounded-lg border-2 transition-all text-sm ${
-                      formData.gender === option.value
-                        ? 'border-primary bg-primary/10 text-foreground'
-                        : 'border-border hover:border-primary/50 text-muted-foreground'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              {errors.gender && (
-                <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {errors.gender}
-                </p>
-              )}
-            </div>
-
-            {/* Age, Height, Weight Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Age and Height Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Age <span className="text-destructive">*</span>
@@ -262,25 +208,6 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                 </div>
                 {errors.height && (
                   <p className="mt-1 text-xs text-destructive">{errors.height}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Weight (lbs) <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.weight || ''}
-                  onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) || undefined })}
-                  className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                    errors.weight ? 'border-destructive' : 'border-border'
-                  }`}
-                  placeholder="180"
-                />
-                {errors.weight && (
-                  <p className="mt-1 text-xs text-destructive">{errors.weight}</p>
                 )}
               </div>
             </div>
@@ -381,51 +308,6 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                   {errors.primaryGoal}
                 </p>
               )}
-            </div>
-
-            {/* Optional Targets */}
-            <div className="border-t border-border pt-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Optional Targets</h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Target Weight (lbs)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={formData.targetWeight || ''}
-                    onChange={(e) => setFormData({ ...formData, targetWeight: parseFloat(e.target.value) || undefined })}
-                    className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                      errors.targetWeight ? 'border-destructive' : 'border-border'
-                    }`}
-                    placeholder="Optional"
-                  />
-                  {errors.targetWeight && (
-                    <p className="mt-1 text-xs text-destructive">{errors.targetWeight}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Target Body Fat (%)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={formData.targetBodyFat || ''}
-                    onChange={(e) => setFormData({ ...formData, targetBodyFat: parseFloat(e.target.value) || undefined })}
-                    className={`w-full px-4 py-3 border rounded-lg bg-input-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-transparent ${
-                      errors.targetBodyFat ? 'border-destructive' : 'border-border'
-                    }`}
-                    placeholder="Optional"
-                  />
-                  {errors.targetBodyFat && (
-                    <p className="mt-1 text-xs text-destructive">{errors.targetBodyFat}</p>
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* Navigation */}

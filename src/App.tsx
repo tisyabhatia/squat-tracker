@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import FirstTimeExperience from './components/FirstTimeExperience';
 import { Dashboard } from './components/Dashboard';
@@ -48,6 +48,9 @@ export default function App() {
   const [showDemoBanner, setShowDemoBanner] = useState(isDemoMode());
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
+  // Track previous workout ID to detect NEW workouts (not existing ones)
+  const previousWorkoutIdRef = useRef<string | null>(null);
+
   // Check for existing authentication on mount
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -65,13 +68,26 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Auto-navigate to active workout when one is started
+  // Auto-navigate to active workout when a NEW workout is started
   useEffect(() => {
     if (activeWorkout && activeWorkout.status === 'in-progress') {
-      // Only navigate if we're not already on the active workout page
-      if (currentView !== 'active-workout' && currentView !== 'welcome' && currentView !== 'first-time-experience') {
-        setCurrentView('active-workout');
+      const currentWorkoutId = activeWorkout.id;
+      const previousWorkoutId = previousWorkoutIdRef.current;
+
+      // Only auto-navigate if this is a NEWLY STARTED workout (ID changed)
+      const isNewWorkout = currentWorkoutId !== previousWorkoutId;
+
+      if (isNewWorkout) {
+        // This is a new workout - auto-navigate to active workout page
+        if (currentView !== 'active-workout' && currentView !== 'welcome' && currentView !== 'first-time-experience') {
+          setCurrentView('active-workout');
+        }
+        // Update the ref to track this workout
+        previousWorkoutIdRef.current = currentWorkoutId;
       }
+    } else {
+      // No active workout - reset the ref
+      previousWorkoutIdRef.current = null;
     }
   }, [activeWorkout, currentView]);
 
