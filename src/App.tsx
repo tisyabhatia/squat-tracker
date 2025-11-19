@@ -8,22 +8,26 @@ import { ActiveWorkout } from './components/ActiveWorkout';
 import { ExerciseLibrary } from './components/ExerciseLibrary';
 import { Settings } from './components/Settings';
 import { SyncStatus } from './components/SyncStatus';
-import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, Zap, LogOut, Trophy, TrendingUp } from 'lucide-react';
+import { Home, LayoutDashboard, History, Play, Menu, X, Dumbbell, Settings as SettingsIcon, LogOut, Trophy, TrendingUp } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Badge } from './components/ui/badge';
-import { initializeDemoMode, isDemoMode, clearDemoMode } from './utils/demoData';
+import { isDemoMode, clearDemoMode } from './utils/demoData';
 import { userProfileStorage, workoutSessionStorage } from './utils/storage';
 import { UserProfile, WorkoutSession } from './types';
 import { exerciseStorage } from './utils/storage';
 import { firestoreUserProfile, firestoreWorkouts } from './services/firestore';
 import { auth } from './config/firebase';
 import { useFirestoreSync } from './hooks/useFirestoreSync';
+import { useApp } from './contexts/AppContext';
 
 type View = 'welcome' | 'first-time-experience' | 'day-1-celebration' | 'home' | 'dashboard' | 'history' | 'active-workout' | 'exercises' | 'settings' | 'generator';
 
 export default function App() {
   // Enable Firestore real-time sync
   const { syncStatus, lastSyncTime } = useFirestoreSync();
+
+  // Get active workout from context
+  const { activeWorkout } = useApp();
 
   // Clear old auth/onboarding data on mount if no profile exists
   const checkAndCleanOldData = () => {
@@ -60,6 +64,16 @@ export default function App() {
 
     return () => unsubscribe();
   }, []);
+
+  // Auto-navigate to active workout when one is started
+  useEffect(() => {
+    if (activeWorkout && activeWorkout.status === 'in-progress') {
+      // Only navigate if we're not already on the active workout page
+      if (currentView !== 'active-workout' && currentView !== 'welcome' && currentView !== 'first-time-experience') {
+        setCurrentView('active-workout');
+      }
+    }
+  }, [activeWorkout, currentView]);
 
   // Safely get workout stats
   const getWorkoutStats = () => {
@@ -146,7 +160,7 @@ export default function App() {
 
   // Welcome screen
   if (currentView === 'welcome') {
-    return <WelcomeScreen onStartFresh={handleStartFresh} onTryDemo={handleTryDemo} />;
+    return <WelcomeScreen onStartFresh={handleStartFresh} />;
   }
 
   // First Time Experience (Auth + Onboarding + First Action)
@@ -353,14 +367,29 @@ export default function App() {
 
             {/* Main Action Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Resume Workout Button - Shows if active workout exists */}
+              {activeWorkout && activeWorkout.status === 'in-progress' && (
+                <div
+                  onClick={() => setCurrentView('active-workout')}
+                  className="p-8 bg-gradient-to-br from-primary to-secondary rounded-lg border-2 border-primary hover:shadow-xl cursor-pointer transition-all hover:scale-105 col-span-full"
+                >
+                  <Play className="w-16 h-16 text-primary-foreground mb-4 animate-pulse" />
+                  <h3 className="mb-2 text-primary-foreground text-xl font-bold">Resume Workout</h3>
+                  <p className="text-sm text-primary-foreground/90">
+                    Continue your "{activeWorkout.name}" workout
+                  </p>
+                </div>
+              )}
+
+              {/* Start New Workout Button - Always visible */}
               <div
-                onClick={() => setCurrentView('active-workout')}
+                onClick={() => setCurrentView('exercises')}
                 className="p-8 bg-card rounded-lg border-2 border-primary hover:border-primary hover:shadow-lg cursor-pointer transition-all hover:scale-105"
               >
                 <Play className="w-16 h-16 text-primary mb-4" />
                 <h3 className="mb-2 text-foreground text-xl">Start Workout</h3>
                 <p className="text-sm text-muted-foreground">
-                  Begin your workout session and track your progress
+                  Choose a workout template to begin tracking
                 </p>
               </div>
 
