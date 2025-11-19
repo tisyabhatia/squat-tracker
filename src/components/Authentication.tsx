@@ -3,6 +3,7 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   AuthError
 } from 'firebase/auth';
 import { auth, googleProvider, appleProvider } from '../config/firebase';
@@ -20,6 +21,7 @@ const Authentication: React.FC<AuthenticationProps> = ({ onAuthSuccess }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   const handleGoogleSignIn = async () => {
     if (!agreedToTerms) {
@@ -78,6 +80,37 @@ const Authentication: React.FC<AuthenticationProps> = ({ onAuthSuccess }) => {
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address first.');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetEmailSent(true);
+      setTimeout(() => setResetEmailSent(false), 5000);
+    } catch (err) {
+      const error = err as AuthError;
+      if (error.code === 'auth/user-not-found') {
+        setError('No account found with this email address.');
+      } else {
+        setError('Failed to send password reset email. Please try again.');
+      }
+      console.error('Password reset error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -260,6 +293,28 @@ const Authentication: React.FC<AuthenticationProps> = ({ onAuthSuccess }) => {
             </div>
           )}
 
+          {/* Forgot Password Link (Sign In Mode Only) */}
+          {mode === 'signin' && (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={loading}
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
+
+          {/* Password Reset Success Message */}
+          {resetEmailSent && (
+            <div className="bg-accent/20 border border-accent/30 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-foreground">Password reset email sent! Check your inbox.</p>
+            </div>
+          )}
+
           {/* Terms and Consent */}
           <div className="flex items-start gap-3">
             <input
@@ -271,7 +326,8 @@ const Authentication: React.FC<AuthenticationProps> = ({ onAuthSuccess }) => {
               disabled={loading}
             />
             <label htmlFor="terms" className="text-sm text-muted-foreground">
-              I agree to the app collecting and processing data for app functionality.
+              I agree to data collection and processing for app functionality.
+              By continuing, you agree to our terms of service and privacy policy.
             </label>
           </div>
 

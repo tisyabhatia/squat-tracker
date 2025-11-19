@@ -55,6 +55,10 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
       newErrors.weight = 'Weight must be between 50 and 400 lbs';
     }
 
+    if (!formData.gender) {
+      newErrors.gender = 'Gender is required';
+    }
+
     if (!formData.fitnessLevel) {
       newErrors.fitnessLevel = 'Experience level is required';
     }
@@ -164,6 +168,40 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({
                 <p className="mt-1 text-sm text-destructive flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   {errors.name}
+                </p>
+              )}
+            </div>
+
+            {/* Gender Selection */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Gender <span className="text-destructive">*</span>
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {[
+                  { value: 'male', label: 'Male' },
+                  { value: 'female', label: 'Female' },
+                  { value: 'other', label: 'Other' },
+                  { value: 'prefer-not-to-say', label: 'Prefer not to say' }
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, gender: option.value as any })}
+                    className={`px-4 py-3 rounded-lg border-2 transition-all text-sm ${
+                      formData.gender === option.value
+                        ? 'border-primary bg-primary/10 text-foreground'
+                        : 'border-border hover:border-primary/50 text-muted-foreground'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              {errors.gender && (
+                <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.gender}
                 </p>
               )}
             </div>

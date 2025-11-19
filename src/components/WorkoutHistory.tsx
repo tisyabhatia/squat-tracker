@@ -35,88 +35,88 @@ export function WorkoutHistory() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="mb-2">Workout History</h1>
-        <p className="text-gray-600">
+        <h1 className="mb-2 text-foreground">Workout History</h1>
+        <p className="text-muted-foreground">
           Review your past workouts and track your consistency
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Workouts</p>
-                <p className="mt-2 text-2xl font-bold">{stats.totalWorkouts}</p>
+                <p className="text-sm text-muted-foreground">Total Workouts</p>
+                <p className="mt-2 text-2xl font-bold text-foreground">{stats.totalWorkouts}</p>
               </div>
-              <Dumbbell className="w-8 h-8 text-blue-600" />
+              <Dumbbell className="w-8 h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Minutes</p>
-                <p className="mt-2 text-2xl font-bold">{stats.totalMinutes}</p>
+                <p className="text-sm text-muted-foreground">Total Minutes</p>
+                <p className="mt-2 text-2xl font-bold text-foreground">{stats.totalMinutes}</p>
               </div>
-              <Clock className="w-8 h-8 text-green-600" />
+              <Clock className="w-8 h-8 text-secondary" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Calories</p>
-                <p className="mt-2 text-2xl font-bold">{stats.totalCalories.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Total Calories</p>
+                <p className="mt-2 text-2xl font-bold text-foreground">{stats.totalCalories.toLocaleString()}</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-orange-600" />
+              <TrendingUp className="w-8 h-8 text-accent-foreground" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Avg Duration</p>
-                <p className="mt-2 text-2xl font-bold">{stats.averageDuration} min</p>
+                <p className="text-sm text-muted-foreground">Avg Duration</p>
+                <p className="mt-2 text-2xl font-bold text-foreground">{stats.averageDuration} min</p>
               </div>
-              <Clock className="w-8 h-8 text-purple-600" />
+              <Clock className="w-8 h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <Calendar className="w-5 h-5 text-primary" />
             Recent Workouts
           </CardTitle>
-          <CardDescription>Your workout history from most recent</CardDescription>
+          <CardDescription className="text-muted-foreground">Your workout history from most recent</CardDescription>
         </CardHeader>
         <CardContent>
           {completedWorkouts.length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">No workouts yet</p>
-              <p className="text-sm text-gray-500">Complete your first workout to see it here!</p>
+              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-30" />
+              <p className="text-foreground mb-2">No workouts yet</p>
+              <p className="text-sm text-muted-foreground">Complete your first workout to see it here!</p>
             </div>
           ) : (
             <div className="space-y-4">
               {completedWorkouts.map(workout => (
                 <div
                   key={workout.id}
-                  className="p-4 border rounded-lg hover:border-blue-300 transition-colors cursor-pointer"
+                  className="p-4 border border-border rounded-lg hover:border-primary transition-colors cursor-pointer bg-card"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="mb-1">{workout.name}</h3>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="mb-1 text-foreground font-semibold">{workout.name}</h3>
+                      <p className="text-sm text-muted-foreground">
                         {new Date(workout.date).toLocaleDateString('en-US', {
                           weekday: 'long',
                           year: 'numeric',
@@ -132,33 +132,30 @@ export function WorkoutHistory() {
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm">{workout.duration} min</span>
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">{workout.duration} min</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Dumbbell className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm">{workout.exercises} exercises</span>
+                      <Dumbbell className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">{workout.exercises} exercises</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm">{workout.totalVolume.toLocaleString()} lbs</span>
+                      <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">{workout.totalVolume.toLocaleString()} lbs</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm">{workout.calories} cal</span>
+                      <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">{workout.calories} cal</span>
                     </div>
                   </div>
 
                   {workout.notes && (
-                    <p className="text-sm text-gray-600 italic mb-3">"{workout.notes}"</p>
+                    <p className="text-sm text-muted-foreground italic mb-3">"{workout.notes}"</p>
                   )}
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      View Details
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <ChevronRight className="w-4 h-4" />
+                    <Button variant="outline" size="sm" className="flex-1" disabled>
+                      View Details (Coming Soon)
                     </Button>
                   </div>
                 </div>
