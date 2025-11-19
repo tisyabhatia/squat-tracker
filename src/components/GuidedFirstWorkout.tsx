@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Exercise, WorkoutSession, ExerciseLog, SetLog, WorkoutType } from '../types';
 import { Dumbbell, Plus, Check, ArrowLeft, AlertCircle, Trophy, Clock, Play } from 'lucide-react';
+import { useApp } from '../contexts/AppContext';
+import { calculateWorkoutCalories } from '../utils/calorieCalculator';
 
 interface GuidedFirstWorkoutProps {
   exercises: Exercise[];
@@ -9,6 +11,7 @@ interface GuidedFirstWorkoutProps {
 }
 
 const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onComplete, onSkip }) => {
+  const { userProfile } = useApp();
   const [mode, setMode] = useState<'choose' | 'template' | 'custom' | 'custom-build'>('choose');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [session, setSession] = useState<Partial<WorkoutSession>>({
@@ -191,6 +194,14 @@ const GuidedFirstWorkout: React.FC<GuidedFirstWorkoutProps> = ({ exercises, onCo
       totalVolume,
       status: 'completed'
     };
+
+    // Calculate calories burned based on user profile
+    const calories = calculateWorkoutCalories({
+      userProfile,
+      workoutSession: completedSession
+    });
+
+    completedSession.calories = calories;
 
     onComplete(completedSession);
   };

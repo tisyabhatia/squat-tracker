@@ -7,6 +7,7 @@ import { Play, Pause, Check, Clock, Dumbbell, ChevronRight, TrendingUp, Award, H
 import { Modal, ConfirmModal } from './ui/modal';
 import { useToast } from '../contexts/ToastContext';
 import { useApp } from '../contexts/AppContext';
+import { calculateWorkoutCalories } from '../utils/calorieCalculator';
 
 interface SetData {
   weight: number;
@@ -361,6 +362,15 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
       status: 'completed' as const
     };
 
+    // Calculate calories burned based on user profile
+    const calories = calculateWorkoutCalories({
+      userProfile,
+      workoutSession
+    });
+
+    // Add calories to the workout session
+    workoutSession.calories = calories;
+
     // Add to workout history via context (this updates state and localStorage)
     addWorkoutSession(workoutSession);
 
@@ -409,7 +419,7 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
   };
 
   const calculateWorkoutStats = () => {
-    if (!workout) return { totalVolume: 0, totalReps: 0, maxWeight: 0 };
+    if (!workout) return { totalVolume: 0, totalReps: 0, maxWeight: 0, calories: 0 };
 
     const totalVolume = workout.exercises.reduce((total, exercise) => {
       return total + exercise.completedSets.reduce((sum, set) => sum + (set.weight * set.reps), 0);
@@ -424,7 +434,38 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
       0
     );
 
-    return { totalVolume, totalReps, maxWeight };
+    // Calculate calories for preview
+    const previewSession = {
+      id: 'preview',
+      name: workout.name,
+      type: contextActiveWorkout?.type || ('strength' as const),
+      startTime: contextActiveWorkout?.startTime || new Date(Date.now() - elapsedTime * 1000).toISOString(),
+      endTime: new Date().toISOString(),
+      duration: elapsedTime,
+      exercises: workout.exercises.map((ex, idx) => {
+        const originalExercise = contextActiveWorkout?.exercises[idx];
+        return {
+          exerciseId: originalExercise?.exerciseId || ex.name.toLowerCase().replace(/\s+/g, '-'),
+          exerciseName: ex.name,
+          sets: ex.completedSets.map((set, setIdx) => ({
+            setNumber: setIdx + 1,
+            weight: set.weight,
+            reps: set.reps,
+            completed: true,
+            timestamp: set.timestamp
+          })),
+          completed: true
+        };
+      }),
+      status: 'in-progress' as const
+    };
+
+    const calories = calculateWorkoutCalories({
+      userProfile,
+      workoutSession: previewSession
+    });
+
+    return { totalVolume, totalReps, maxWeight, calories };
   };
 
   const handleCancelWorkout = () => {
@@ -833,9 +874,13 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
                   <span className="text-gray-600">Total Volume:</span>
                   <span className="font-semibold text-gray-900">{stats.totalVolume.toLocaleString()} lbs</span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
                   <span className="text-gray-600">Max Weight:</span>
                   <span className="font-semibold text-gray-900">{stats.maxWeight} lbs</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Calories Burned:</span>
+                  <span className="font-semibold text-orange-600">{stats.calories} kcal</span>
                 </div>
               </div>
 

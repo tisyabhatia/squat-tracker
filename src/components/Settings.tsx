@@ -11,6 +11,8 @@ import { dataManagement } from '../utils/storage';
 import { clearDemoMode } from '../utils/demoData';
 import { DangerConfirmModal } from './ui/modal';
 import { useToast } from '../contexts/ToastContext';
+import { auth } from '../config/firebase';
+import { deleteAllUserData } from '../services/firestore';
 
 export function Settings() {
   const { settings, updateSettings } = useApp();
@@ -29,21 +31,65 @@ export function Settings() {
     setShowClearDataModal(true);
   };
 
-  const confirmClearData = () => {
-    dataManagement.clearAll();
-    toast.success('All data has been cleared. Reloading...');
-    setTimeout(() => window.location.reload(), 1500);
+  const confirmClearData = async () => {
+    const user = auth.currentUser;
+
+    try {
+      // Delete from Firestore first (if user is logged in)
+      if (user) {
+        await deleteAllUserData(user.uid);
+      }
+
+      // Clear all localStorage
+      dataManagement.clearAll();
+
+      // Sign out the user
+      if (user) {
+        await auth.signOut();
+      }
+
+      toast.success('All data has been cleared. Redirecting...');
+
+      // Reload to welcome screen
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+      console.error('Error clearing data:', error);
+      toast.error('Failed to clear all data. Please try again.');
+    }
   };
 
   const handleStartOver = () => {
     setShowStartOverModal(true);
   };
 
-  const confirmStartOver = () => {
-    clearDemoMode();
-    dataManagement.clearAll();
-    toast.success('Starting fresh! Reloading...');
-    setTimeout(() => window.location.reload(), 1500);
+  const confirmStartOver = async () => {
+    const user = auth.currentUser;
+
+    try {
+      // Clear demo mode
+      clearDemoMode();
+
+      // Delete from Firestore first (if user is logged in)
+      if (user) {
+        await deleteAllUserData(user.uid);
+      }
+
+      // Clear all localStorage
+      dataManagement.clearAll();
+
+      // Sign out the user
+      if (user) {
+        await auth.signOut();
+      }
+
+      toast.success('Starting fresh! Redirecting...');
+
+      // Reload to welcome screen
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+      console.error('Error starting over:', error);
+      toast.error('Failed to clear data. Please try again.');
+    }
   };
 
   return (
