@@ -35,7 +35,7 @@ interface ActiveWorkoutProps {
 
 export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
   const { toast } = useToast();
-  const { settings, addWorkoutSession, userProfile, updateUserProfile } = useApp();
+  const { settings, addWorkoutSession, userProfile, updateUserProfile, activeWorkout: contextActiveWorkout, setActiveWorkout, workoutTemplates, getExerciseById } = useApp();
   const [isActive, setIsActive] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -48,24 +48,49 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
   const [restTimeRemaining, setRestTimeRemaining] = useState<number | null>(null);
   const [isResting, setIsResting] = useState(false);
 
-  const [workout, setWorkout] = useState<{ name: string; exercises: Exercise[] }>({
-    name: 'Full Body Strength',
-    exercises: [
-      { name: 'Barbell Squat', sets: 4, targetReps: '8-10', completedSets: [] },
-      { name: 'Bench Press', sets: 4, targetReps: '8-10', completedSets: [] },
-      { name: 'Bent Over Rows', sets: 4, targetReps: '10-12', completedSets: [] },
-      { name: 'Overhead Press', sets: 3, targetReps: '8-10', completedSets: [] },
-      { name: 'Romanian Deadlifts', sets: 3, targetReps: '10-12', completedSets: [] },
-    ]
-  });
+  const [workout, setWorkout] = useState<{ name: string; exercises: Exercise[] } | null>(null);
 
   const [currentWeight, setCurrentWeight] = useState('');
   const [currentReps, setCurrentReps] = useState('');
 
-  // Load previous performances on mount
+  // Initialize workout from context on mount
   useEffect(() => {
+    if (contextActiveWorkout && contextActiveWorkout.status === 'in-progress') {
+      // Transform WorkoutSession to local workout format
+      const transformedWorkout = {
+        name: contextActiveWorkout.name,
+        exercises: contextActiveWorkout.exercises.map(ex => {
+          // Get exercise from library to find target reps/sets
+          const exercise = getExerciseById(ex.exerciseId);
+          const template = contextActiveWorkout.templateId
+            ? workoutTemplates.find(t => t.id === contextActiveWorkout.templateId)
+            : null;
+          const templateExercise = template?.exercises.find(e => e.exerciseId === ex.exerciseId);
+
+          return {
+            name: ex.exerciseName,
+            sets: templateExercise?.sets || 3,
+            targetReps: templateExercise?.targetReps?.toString() || '8-10',
+            completedSets: ex.sets
+              .filter(set => set.completed)
+              .map(set => ({
+                weight: set.weight || 0,
+                reps: set.reps || 0,
+                timestamp: set.timestamp
+              }))
+          };
+        })
+      };
+      setWorkout(transformedWorkout);
+
+      // Calculate elapsed time from start time
+      const startTime = new Date(contextActiveWorkout.startTime).getTime();
+      const now = Date.now();
+      setElapsedTime(Math.floor((now - startTime) / 1000));
+    }
     loadPreviousPerformances();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contextActiveWorkout]);
 
   const loadPreviousPerformances = () => {
     try {
@@ -255,6 +280,8 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
   };
 
   const confirmFinishWorkout = () => {
+    if (!workout) return;
+
     // Calculate workout metrics
     const totalVolume = workout.exercises.reduce((total, exercise) => {
       return total + exercise.completedSets.reduce((sum, set) => sum + (set.weight * set.reps), 0);
@@ -262,10 +289,11 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
 
     // Convert to proper WorkoutSession format
     const workoutSession = {
-      id: `workout-${Date.now()}`,
+      id: contextActiveWorkout?.id || `workout-${Date.now()}`,
+      templateId: contextActiveWorkout?.templateId,
       name: workout.name,
-      type: 'strength' as const,
-      startTime: new Date(Date.now() - elapsedTime * 1000).toISOString(),
+      type: contextActiveWorkout?.type || ('strength' as const),
+      startTime: contextActiveWorkout?.startTime || new Date(Date.now() - elapsedTime * 1000).toISOString(),
       endTime: new Date().toISOString(),
       duration: elapsedTime,
       exercises: workout.exercises.map(ex => ({
@@ -286,6 +314,9 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
 
     // Add to workout history via context (this updates state and localStorage)
     addWorkoutSession(workoutSession);
+
+    // Clear active workout from context
+    setActiveWorkout(null);
 
     // Update workout stats (legacy - for backwards compatibility)
     const stats = JSON.parse(localStorage.getItem('workoutStats') || '{"workoutsThisWeek": 0, "totalMinutes": 0, "currentStreak": 0}');
@@ -314,26 +345,23 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
 
     toast.success('Workout completed! Great job!');
 
-    // Reset workout
+    // Reset local state
     setElapsedTime(0);
     setCurrentExerciseIndex(0);
-    const resetWorkout = {
-      name: 'Full Body Strength',
-      exercises: [
-        { name: 'Barbell Squat', sets: 4, targetReps: '8-10', completedSets: [] },
-        { name: 'Bench Press', sets: 4, targetReps: '8-10', completedSets: [] },
-        { name: 'Bent Over Rows', sets: 4, targetReps: '10-12', completedSets: [] },
-        { name: 'Overhead Press', sets: 3, targetReps: '8-10', completedSets: [] },
-        { name: 'Romanian Deadlifts', sets: 3, targetReps: '10-12', completedSets: [] },
-      ]
-    };
-    setWorkout(resetWorkout);
+    setWorkout(null);
 
     // Reload previous performances for next workout
     loadPreviousPerformances();
+
+    // Navigate back to home
+    if (onBack) {
+      onBack();
+    }
   };
 
   const calculateWorkoutStats = () => {
+    if (!workout) return { totalVolume: 0, totalReps: 0, maxWeight: 0 };
+
     const totalVolume = workout.exercises.reduce((total, exercise) => {
       return total + exercise.completedSets.reduce((sum, set) => sum + (set.weight * set.reps), 0);
     }, 0);
@@ -356,10 +384,48 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
         return;
       }
     }
+    // Clear active workout from context
+    setActiveWorkout(null);
     if (onBack) {
       onBack();
     }
   };
+
+  // Show message if no active workout
+  if (!workout) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="mb-2 text-foreground">Active Workout</h1>
+            <p className="text-muted-foreground">
+              Track your sets and reps in real-time
+            </p>
+          </div>
+          {onBack && (
+            <Button variant="ghost" onClick={() => onBack()}>
+              ← Back to Home
+            </Button>
+          )}
+        </div>
+
+        <Card className="bg-card border-border">
+          <CardContent className="p-12 text-center">
+            <Dumbbell className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
+            <h3 className="mb-2 text-foreground text-xl font-semibold">No Active Workout</h3>
+            <p className="text-muted-foreground mb-6">
+              Start a workout from the Workout Templates to begin tracking your exercises
+            </p>
+            {onBack && (
+              <Button onClick={() => onBack()}>
+                Go to Workout Templates
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
