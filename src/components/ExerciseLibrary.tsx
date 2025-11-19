@@ -24,7 +24,8 @@ export function ExerciseLibrary() {
         >
           ← Back to Exercises
         </Button>
-        <WorkoutGeneration onStartWorkout={() => setShowGenerate(false)} />
+        {/* No callback needed - App.tsx auto-navigates when workout is started */}
+        <WorkoutGeneration />
       </div>
     );
   }
