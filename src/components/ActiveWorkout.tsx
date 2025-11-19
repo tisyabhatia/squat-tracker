@@ -56,21 +56,16 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
   // Initialize workout from context on mount
   useEffect(() => {
     if (contextActiveWorkout && contextActiveWorkout.status === 'in-progress') {
-      // Transform WorkoutSession to local workout format
+      // BUG FIX #2: Use preserved template data instead of looking up template
+      // This prevents stale closure issues and data loss
       const transformedWorkout = {
         name: contextActiveWorkout.name,
         exercises: contextActiveWorkout.exercises.map(ex => {
-          // Get exercise from library to find target reps/sets
-          const exercise = getExerciseById(ex.exerciseId);
-          const template = contextActiveWorkout.templateId
-            ? workoutTemplates.find(t => t.id === contextActiveWorkout.templateId)
-            : null;
-          const templateExercise = template?.exercises.find(e => e.exerciseId === ex.exerciseId);
-
           return {
             name: ex.exerciseName,
-            sets: templateExercise?.sets || 3,
-            targetReps: templateExercise?.targetReps?.toString() || '8-10',
+            // Use preserved template metadata (from BUG FIX #1)
+            sets: ex.targetSets || 3,
+            targetReps: ex.targetReps?.toString() || '8-10',
             completedSets: ex.sets
               .filter(set => set.completed)
               .map(set => ({
@@ -254,7 +249,12 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
   }
 
   // Now safe to access workout.exercises
-  const currentExercise = workout.exercises[currentExerciseIndex];
+  // BUG FIX #5: Validate array bounds to prevent crashes
+  const safeExerciseIndex = Math.min(currentExerciseIndex, workout.exercises.length - 1);
+  if (safeExerciseIndex !== currentExerciseIndex && safeExerciseIndex >= 0) {
+    setCurrentExerciseIndex(safeExerciseIndex);
+  }
+  const currentExercise = workout.exercises[safeExerciseIndex] || workout.exercises[0];
   const totalSets = workout.exercises.reduce((acc, ex) => acc + ex.sets, 0);
   const completedSets = workout.exercises.reduce((acc, ex) => acc + ex.completedSets.length, 0);
 
@@ -333,18 +333,22 @@ export function ActiveWorkout({ onBack }: ActiveWorkoutProps) {
       startTime: contextActiveWorkout?.startTime || new Date(Date.now() - elapsedTime * 1000).toISOString(),
       endTime: new Date().toISOString(),
       duration: elapsedTime,
-      exercises: workout.exercises.map(ex => ({
-        exerciseId: ex.name.toLowerCase().replace(/\s+/g, '-'),
-        exerciseName: ex.name,
-        sets: ex.completedSets.map((set, idx) => ({
-          setNumber: idx + 1,
-          weight: set.weight,
-          reps: set.reps,
-          completed: true,
-          timestamp: set.timestamp
-        })),
-        completed: true
-      })),
+      exercises: workout.exercises.map((ex, idx) => {
+        // BUG FIX #3: Preserve original exerciseId from context
+        const originalExercise = contextActiveWorkout?.exercises[idx];
+        return {
+          exerciseId: originalExercise?.exerciseId || ex.name.toLowerCase().replace(/\s+/g, '-'),
+          exerciseName: ex.name,
+          sets: ex.completedSets.map((set, setIdx) => ({
+            setNumber: setIdx + 1,
+            weight: set.weight,
+            reps: set.reps,
+            completed: true,
+            timestamp: set.timestamp
+          })),
+          completed: true
+        };
+      }),
       totalVolume,
       status: 'completed' as const
     };
