@@ -51,22 +51,42 @@ export default function App() {
   // Track previous workout ID to detect NEW workouts (not existing ones)
   const previousWorkoutIdRef = useRef<string | null>(null);
 
-  // Check for existing authentication on mount
+  // Check for existing authentication and wait for Firestore sync
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        // User is authenticated, check if they have a profile
-        const profile = userProfileStorage.get();
-        if (profile) {
-          // User is logged in with profile, go to home
-          setCurrentView('home');
-        }
+      if (!user) {
+        // No user logged in - show welcome screen
+        setIsCheckingAuth(false);
+        setCurrentView('welcome');
       }
-      setIsCheckingAuth(false);
+      // If user is logged in, we wait for syncStatus to complete (see next useEffect)
     });
 
     return () => unsubscribe();
   }, []);
+
+  // Navigate to appropriate view after Firestore sync completes
+  useEffect(() => {
+    const user = auth.currentUser;
+
+    // Only proceed if we have a user AND sync has completed
+    if (user && (syncStatus === 'synced' || syncStatus === 'error')) {
+      const profile = userProfileStorage.get();
+
+      if (profile) {
+        // Profile exists (loaded from localStorage or Firestore) - go to home
+        setCurrentView('home');
+      } else {
+        // Sync completed but no profile found - this is a new user
+        // Stay on welcome screen so they can start onboarding
+      }
+
+      setIsCheckingAuth(false);
+    } else if (!user && syncStatus === 'offline') {
+      // No user and offline - we're done checking
+      setIsCheckingAuth(false);
+    }
+  }, [syncStatus]);
 
   // Auto-navigate to active workout when a NEW workout is started
   useEffect(() => {
@@ -105,13 +125,15 @@ export default function App() {
     return userProfileStorage.get();
   };
 
-  // Show loading screen while checking authentication
+  // Show loading screen while checking authentication and syncing data
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">
+            {syncStatus === 'syncing' ? 'Syncing your data...' : 'Loading...'}
+          </p>
         </div>
       </div>
     );
